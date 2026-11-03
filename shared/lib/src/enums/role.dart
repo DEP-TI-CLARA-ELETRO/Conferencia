@@ -32,3 +32,5 @@ enum Role {
     return null; // não achou nenhum código igual
   }
 }
+
+//basicamente, o enum Role é uma lista de cargos do sistema, cada um com um código técnico e um rótulo amigável. Ele também inclui um método estático para converter um código em uma instância de Role, retornando null se o código não corresponder a nenhum cargo definido.
