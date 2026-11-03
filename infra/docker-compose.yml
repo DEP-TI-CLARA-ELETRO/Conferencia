@@ -1,0 +1,37 @@
+name: conferencia
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: conferencia_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-conferencia}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-conferencia_dev}
+      POSTGRES_DB: ${DB_NAME:-conferencia}
+      TZ: America/Manaus
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - conferencia_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-conferencia} -d ${DB_NAME:-conferencia}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Opcional: docker compose --profile tools up -d
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: conferencia_pgadmin
+    profiles: ["tools"]
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+
+volumes:
+  conferencia_pgdata:
