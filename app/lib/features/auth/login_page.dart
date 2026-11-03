@@ -5,6 +5,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_card.dart';
 import 'auth_controller.dart';
 
+/// Tela de login.
+/// ConsumerStatefulWidget = tem estado próprio (_obscure, controllers) + Riverpod.
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -13,36 +15,48 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
+  // Controles dos campos de texto
   final _email = TextEditingController();
   final _password = TextEditingController();
+  // Chave para validar o Form inteiro
   final _formKey = GlobalKey<FormState>();
+  // true = senha escondida (bolinhas)
   bool _obscure = true;
 
   @override
   void dispose() {
+    // Libera controllers quando a tela some (evita vazamento de memória)
     _email.dispose();
     _password.dispose();
     super.dispose();
   }
 
   void _submit() {
+    // validate() roda os validators; se falhar, para aqui
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    ref.read(authControllerProvider.notifier).login(_email.text.trim(), _password.text);
+    // Pede login ao controller (não fala com a API direto)
+    ref.read(authControllerProvider.notifier).login(
+          _email.text.trim(),
+          _password.text,
+        );
   }
 
   @override
   Widget build(BuildContext context) {
+    // watch = se AuthState mudar, redesenha (erro, busy, etc.)
     final auth = ref.watch(authControllerProvider);
 
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
+          // Em tela baixa, permite rolar
           padding: const EdgeInsets.all(24),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
+            constraints: const BoxConstraints(maxWidth: 400), // não estica demais
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Logo
                 Container(
                   width: 56,
                   height: 56,
@@ -68,32 +82,40 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   child: Form(
                     key: _formKey,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      crossAxisAlignment: CrossAxisAlignment.stretch, // largura total
                       children: [
                         TextFormField(
                           controller: _email,
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
                           decoration: const InputDecoration(labelText: 'E-mail'),
-                          validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o e-mail' : null,
+                          // null = ok; String = mensagem de erro
+                          validator: (v) =>
+                              (v == null || v.trim().isEmpty) ? 'Informe o e-mail' : null,
                         ),
                         const SizedBox(height: 14),
                         TextFormField(
                           controller: _password,
                           obscureText: _obscure,
-                          onFieldSubmitted: (_) => _submit(),
+                          onFieldSubmitted: (_) => _submit(), // Enter envia
                           decoration: InputDecoration(
                             labelText: 'Senha',
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                // ternário: ícone conforme _obscure
+                                _obscure
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
                                 size: 20,
                               ),
+                              // setState = muda estado local e redesenha
                               onPressed: () => setState(() => _obscure = !_obscure),
                             ),
                           ),
-                          validator: (v) => (v == null || v.isEmpty) ? 'Informe a senha' : null,
+                          validator: (v) =>
+                              (v == null || v.isEmpty) ? 'Informe a senha' : null,
                         ),
+                        // Só mostra a caixa vermelha se houver erro
                         if (auth.error != null) ...[
                           const SizedBox(height: 14),
                           Container(
@@ -110,12 +132,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ],
                         const SizedBox(height: 20),
                         FilledButton(
+                          // busy → botão desabilitado (onPressed null)
                           onPressed: auth.busy ? null : _submit,
                           child: auth.busy
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
                                 )
                               : const Text('Entrar'),
                         ),

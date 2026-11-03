@@ -9,8 +9,11 @@ import '../auth/auth_controller.dart';
 import 'nav_items.dart';
 import 'shell_providers.dart';
 
+/// A partir desta largura (px), mostramos sidebar fixa; abaixo, menu gaveta.
 const _wideBreakpoint = 900.0;
 
+/// Moldura do app logado: menu + barra superior + miolo (child).
+/// O child é HomePage ou ClosingsPage, trocado pelo go_router.
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.child});
 
@@ -19,12 +22,14 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authControllerProvider).user;
+    // Sem usuário não deveria chegar aqui (router manda para login)
     if (user == null) return const SizedBox.shrink();
 
-    final location = GoRouterState.of(context).uri.path;
-    final items = navItemsFor(user);
+    final location = GoRouterState.of(context).uri.path; // URL atual
+    final items = navItemsFor(user); // menu filtrado por permissão
     final wide = MediaQuery.sizeOf(context).width >= _wideBreakpoint;
 
+    // Conteúdo centralizado com largura máxima (não estica infinito em TV/ultrawide)
     final content = Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
@@ -33,6 +38,7 @@ class AppShell extends ConsumerWidget {
       ),
     );
 
+    // ----- LAYOUT DESKTOP: sidebar | conteúdo -----
     if (wide) {
       return Scaffold(
         body: Row(
@@ -44,7 +50,7 @@ class AppShell extends ConsumerWidget {
                 children: [
                   _TopBar(user: user, wide: true),
                   const Divider(height: 1),
-                  Expanded(child: content),
+                  Expanded(child: content), // miolo cresce
                 ],
               ),
             ),
@@ -53,10 +59,12 @@ class AppShell extends ConsumerWidget {
       );
     }
 
+    // ----- LAYOUT MOBILE: AppBar + Drawer -----
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
         child: Builder(
+          // Builder cria um context "filho" que enxerga o Scaffold
           builder: (context) => _TopBar(
             user: user,
             wide: false,
@@ -73,12 +81,13 @@ class AppShell extends ConsumerWidget {
   }
 }
 
+/// Menu lateral (lista de NavItem).
 class _Sidebar extends StatelessWidget {
   const _Sidebar({required this.items, required this.location, this.closeOnTap = false});
 
   final List<NavItem> items;
   final String location;
-  final bool closeOnTap;
+  final bool closeOnTap; // no drawer: fecha ao tocar
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +95,7 @@ class _Sidebar extends StatelessWidget {
       width: 248,
       color: Colors.white,
       child: SafeArea(
+        // SafeArea evita notch/status bar
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -98,7 +108,7 @@ class _Sidebar extends StatelessWidget {
                   Flexible(
                     child: Text(
                       'Conferência',
-                      overflow: TextOverflow.ellipsis,
+                      overflow: TextOverflow.ellipsis, // corta com ...
                       style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.3),
                     ),
                   ),
@@ -109,13 +119,14 @@ class _Sidebar extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 children: [
+                  // collection-for: um tile por item
                   for (final item in items)
                     _NavTile(
                       item: item,
                       selected: location == item.path || location.startsWith('${item.path}/'),
                       onTap: () {
-                        if (closeOnTap) Navigator.of(context).pop();
-                        context.go(item.path);
+                        if (closeOnTap) Navigator.of(context).pop(); // fecha drawer
+                        context.go(item.path); // navega (go_router)
                       },
                     ),
                 ],
@@ -142,6 +153,7 @@ class _Logo extends StatelessWidget {
   }
 }
 
+/// Uma linha do menu.
 class _NavTile extends StatelessWidget {
   const _NavTile({required this.item, required this.selected, required this.onTap});
 
@@ -186,12 +198,13 @@ class _NavTile extends StatelessWidget {
   }
 }
 
+/// Barra superior: loja, data, usuário.
 class _TopBar extends ConsumerWidget {
   const _TopBar({required this.user, required this.wide, this.onMenu});
 
   final UserDto user;
   final bool wide;
-  final VoidCallback? onMenu;
+  final VoidCallback? onMenu; // só no mobile (abre drawer)
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -209,11 +222,10 @@ class _TopBar extends ConsumerWidget {
             child: Row(
               children: [
                 if (!wide) IconButton(icon: const Icon(Icons.menu_rounded), onPressed: onMenu),
-                if (store != null)
-                  _StorePicker(user: user, current: store),
+                if (store != null) _StorePicker(user: user, current: store),
                 const SizedBox(width: 8),
                 _DatePill(date: date),
-                const Spacer(),
+                const Spacer(), // empurra o que vem depois para a direita
                 _UserMenu(user: user, showName: wide),
               ],
             ),
@@ -224,6 +236,7 @@ class _TopBar extends ConsumerWidget {
   }
 }
 
+/// Pílula visual reutilizada (ícone + texto).
 class _Pill extends StatelessWidget {
   const _Pill({required this.icon, required this.label});
 
@@ -256,6 +269,7 @@ class _Pill extends StatelessWidget {
   }
 }
 
+/// Seletor de loja (menu se houver 2+ lojas).
 class _StorePicker extends ConsumerWidget {
   const _StorePicker({required this.user, required this.current});
 
@@ -265,7 +279,7 @@ class _StorePicker extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pill = _Pill(icon: Icons.storefront_outlined, label: current.name);
-    if (user.stores.length < 2) return Flexible(child: pill);
+    if (user.stores.length < 2) return Flexible(child: pill); // só mostra, sem menu
 
     return Flexible(
       child: PopupMenuButton<int>(
@@ -274,12 +288,13 @@ class _StorePicker extends ConsumerWidget {
         itemBuilder: (_) => [
           for (final s in user.stores) PopupMenuItem(value: s.id, child: Text(s.name)),
         ],
-        child: pill,
+        child: pill, // o que aparece fechado
       ),
     );
   }
 }
 
+/// Pílula de data: toque abre o calendário.
 class _DatePill extends ConsumerWidget {
   const _DatePill({required this.date});
 
@@ -296,6 +311,7 @@ class _DatePill extends ConsumerWidget {
           firstDate: DateTime(2020),
           lastDate: DateTime.now().add(const Duration(days: 1)),
         );
+        // Usuário pode cancelar → picked fica null
         if (picked != null) ref.read(selectedDateProvider.notifier).select(picked);
       },
       child: _Pill(icon: Icons.calendar_today_outlined, label: formatDate(date)),
@@ -303,6 +319,7 @@ class _DatePill extends ConsumerWidget {
   }
 }
 
+/// Avatar + menu Sair.
 class _UserMenu extends ConsumerWidget {
   const _UserMenu({required this.user, required this.showName});
 
@@ -313,13 +330,13 @@ class _UserMenu extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return PopupMenuButton<String>(
       tooltip: 'Conta',
-      offset: const Offset(0, 48),
+      offset: const Offset(0, 48), // abre um pouco abaixo
       onSelected: (v) {
         if (v == 'logout') ref.read(authControllerProvider.notifier).logout();
       },
       itemBuilder: (_) => [
         PopupMenuItem(
-          enabled: false,
+          enabled: false, // só informativo (não clicável)
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

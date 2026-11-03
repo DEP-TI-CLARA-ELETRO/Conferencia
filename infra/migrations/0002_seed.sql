@@ -1,8 +1,14 @@
--- Perfis, permissoes e loja inicial.
--- O usuario admin de desenvolvimento e criado pelo servidor (precisa de hash de senha).
+-- =============================================================================
+-- Migration 0002: dados iniciais (loja, perfis, permissões e vínculos)
+--
+-- O usuário admin NÃO é criado aqui: a senha precisa de hash bcrypt,
+-- então o servidor Dart cria o admin no seed (dev_seed.dart).
+-- =============================================================================
 
+-- Uma loja de exemplo
 INSERT INTO stores (code, name) VALUES ('01', 'Loja 01 - Centro');
 
+-- Perfis do fluxo de conferência
 INSERT INTO roles (code, name) VALUES
     ('admin',        'Administrador'),
     ('fiscal',       'Fiscal de Caixa'),
@@ -13,6 +19,7 @@ INSERT INTO roles (code, name) VALUES
     ('rh',           'Recursos Humanos'),
     ('financeiro',   'Financeiro');
 
+-- Catálogo de permissões
 INSERT INTO permissions (code, description) VALUES
     ('home.view',         'Ver pagina inicial'),
     ('closings.view',     'Ver caixas do dia'),
@@ -26,11 +33,11 @@ INSERT INTO permissions (code, description) VALUES
     ('finance.view',      'Ver financeiro'),
     ('users.manage',      'Gerenciar usuarios e permissoes');
 
--- Admin: tudo
+-- Admin recebe TODAS as permissões (produto cartesiano roles x permissions)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r CROSS JOIN permissions p WHERE r.code = 'admin';
 
--- Demais perfis
+-- Demais perfis: lista explícita (role_code, perm_code)
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM (VALUES

@@ -1,6 +1,9 @@
 import '../../core/widgets/status_chip.dart';
 
-/// Dados FICTICIOS usados so para validar o visual. Sera substituido por dados da API.
+/// Dados FICTÍCIOS usados só para validar o visual.
+/// Depois serão substituídos por dados reais da API.
+
+/// Status de exemplo de um caixa (com rótulo + cor do chip).
 enum SampleStatus {
   concluido('Concluído', StatusTone.success),
   emConferencia('Em conferência', StatusTone.warning),
@@ -12,6 +15,7 @@ enum SampleStatus {
   final StatusTone tone;
 }
 
+/// Um caixa do dia (versão de exemplo).
 class ClosingSample {
   const ClosingSample({
     required this.register,
@@ -23,17 +27,19 @@ class ClosingSample {
     required this.status,
   });
 
-  final int register;
-  final String operator;
-  final String opened;
-  final String closed;
-  final double expected;
-  final double? counted;
+  final int register; // número do PDV/caixa
+  final String operator; // operador
+  final String opened; // horário abertura (texto)
+  final String closed; // horário fechamento
+  final double expected; // valor esperado (PDV)
+  final double? counted; // valor conferido (null = ainda não conferiu)
   final SampleStatus status;
 
+  /// Diferença = conferido - esperado (null se ainda não conferiu).
   double? get difference => counted == null ? null : counted! - expected;
 }
 
+/// Lista fixa de caixas de demonstração.
 const closingSamples = <ClosingSample>[
   ClosingSample(register: 101, operator: 'Maria Silva', opened: '08:02', closed: '14:32', expected: 4265.80, counted: 4265.80, status: SampleStatus.concluido),
   ClosingSample(register: 102, operator: 'João Santos', opened: '08:10', closed: '15:10', expected: 3821.40, counted: 3821.40, status: SampleStatus.concluido),

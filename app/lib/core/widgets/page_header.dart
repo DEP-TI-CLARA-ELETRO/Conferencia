@@ -2,19 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
+/// Cabeçalho de página: título grande + subtítulo + área opcional à direita.
 class PageHeader extends StatelessWidget {
   const PageHeader({super.key, required this.title, this.subtitle, this.trailing});
 
   final String title;
   final String? subtitle;
-  final Widget? trailing;
+  final Widget? trailing; // botão/ação à direita (opcional)
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.end, // alinha pela base
       children: [
         Expanded(
+          // Expanded = ocupa todo o espaço horizontal que sobrar
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -29,6 +31,7 @@ class PageHeader extends StatelessWidget {
             ],
           ),
         ),
+        // ?trailing = inclui o widget só se não for null (sintaxe Dart recente)
         ?trailing,
       ],
     );

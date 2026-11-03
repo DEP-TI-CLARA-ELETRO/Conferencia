@@ -9,6 +9,7 @@ import '../../core/widgets/status_chip.dart';
 import '../shell/shell_providers.dart';
 import 'closing_sample.dart';
 
+/// Página "Caixas do dia": filtros + lista/tabela de exemplo.
 class ClosingsPage extends ConsumerStatefulWidget {
   const ClosingsPage({super.key});
 
@@ -17,18 +18,23 @@ class ClosingsPage extends ConsumerStatefulWidget {
 }
 
 class _ClosingsPageState extends ConsumerState<ClosingsPage> {
+  /// null = mostrar todos; senão filtra por aquele status
   SampleStatus? _filter;
 
   @override
   Widget build(BuildContext context) {
     final date = ref.watch(selectedDateProvider);
-    final rows = closingSamples.where((c) => _filter == null || c.status == _filter).toList();
+    // where = filtro; toList = materializa a lista
+    final rows = closingSamples
+        .where((c) => _filter == null || c.status == _filter)
+        .toList();
 
     return ListView(
       padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 600 ? 16 : 28),
       children: [
         PageHeader(title: 'Caixas do dia', subtitle: formatLongDate(date)),
         const SizedBox(height: 20),
+        // Chips de filtro
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -36,6 +42,7 @@ class _ClosingsPageState extends ConsumerState<ClosingsPage> {
             ChoiceChip(
               label: Text('Todos (${closingSamples.length})'),
               selected: _filter == null,
+              // setState muda _filter e redesenha
               onSelected: (_) => setState(() => _filter = null),
             ),
             for (final s in SampleStatus.values)
@@ -48,10 +55,11 @@ class _ClosingsPageState extends ConsumerState<ClosingsPage> {
         ),
         const SizedBox(height: 16),
         AppCard(
-          padding: EdgeInsets.zero,
+          padding: EdgeInsets.zero, // a tabela controla o padding interno
           child: Column(
             children: [
               const _HeaderRow(),
+              // Para cada caixa: divisor + linha
               for (final c in rows) ...[
                 const Divider(height: 1),
                 _ClosingRow(c),
@@ -59,7 +67,10 @@ class _ClosingsPageState extends ConsumerState<ClosingsPage> {
               if (rows.isEmpty)
                 const Padding(
                   padding: EdgeInsets.all(32),
-                  child: Text('Nenhum caixa neste filtro.', style: TextStyle(color: AppColors.textSecondary)),
+                  child: Text(
+                    'Nenhum caixa neste filtro.',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
                 ),
             ],
           ),
@@ -74,30 +85,44 @@ class _ClosingsPageState extends ConsumerState<ClosingsPage> {
   }
 }
 
-const _headStyle = TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600);
+const _headStyle = TextStyle(
+  color: AppColors.textSecondary,
+  fontSize: 12,
+  fontWeight: FontWeight.w600,
+);
 
+/// Cabeçalho da "tabela" (some no celular).
 class _HeaderRow extends StatelessWidget {
   const _HeaderRow();
 
   @override
   Widget build(BuildContext context) {
+    // Em tela estreita escondemos (SizedBox.shrink = widget vazio)
     if (MediaQuery.sizeOf(context).width < 760) return const SizedBox.shrink();
     return const Padding(
       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
         children: [
+          // flex = proporção da largura (3+2+2+2+2+3 = 14 partes)
           Expanded(flex: 3, child: Text('CAIXA', style: _headStyle)),
           Expanded(flex: 2, child: Text('HORÁRIO', style: _headStyle)),
           Expanded(flex: 2, child: Text('PREVISTO', style: _headStyle, textAlign: TextAlign.right)),
           Expanded(flex: 2, child: Text('CONFERIDO', style: _headStyle, textAlign: TextAlign.right)),
           Expanded(flex: 2, child: Text('DIFERENÇA', style: _headStyle, textAlign: TextAlign.right)),
-          Expanded(flex: 3, child: Align(alignment: Alignment.centerRight, child: Text('SITUAÇÃO', style: _headStyle))),
+          Expanded(
+            flex: 3,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text('SITUAÇÃO', style: _headStyle),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
+/// Uma linha da lista (layout largo = tabela; estreito = card empilhado).
 class _ClosingRow extends StatelessWidget {
   const _ClosingRow(this.c);
 
@@ -122,9 +147,10 @@ class _ClosingRow extends StatelessWidget {
     final chip = StatusChip(c.status.label, tone: c.status.tone);
     final diffText = diff == null ? '—' : formatDiff(diff);
 
+    // ----- Desktop: uma Row com várias colunas -----
     if (wide) {
       return InkWell(
-        onTap: () {},
+        onTap: () {}, // futuro: abrir detalhe do caixa
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           child: Row(
@@ -154,6 +180,7 @@ class _ClosingRow extends StatelessWidget {
       );
     }
 
+    // ----- Mobile: coluna compacta -----
     return InkWell(
       onTap: () {},
       child: Padding(
