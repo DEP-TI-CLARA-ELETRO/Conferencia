@@ -73,7 +73,8 @@ A **UI e o fluxo humano** (lista do dia, conferência, etapas) devem nascer **ge
 ## 6. Pendências para o próximo passo
 
 - [x] Arquivar OpenAPI WebPosto e resumir rotas de caixa (`docs/integracoes/`).
-- [ ] Smoke test autenticado (como o token é enviado + amostra real de `CAIXAS` / `CAIXAS_APRESENTADO`).
+- [x] Integração server/app: sync WebPosto (`chave` no `.env`) + listagem de caixas.
+- [ ] Smoke test com chave real (1 posto / 1 dia).
 - [ ] Confirmar se **Distribuidoras GR** usam Nerus no mesmo modelo das Eletros.
 - [ ] Definir, com a operação, os **papéis** que vão usar o MVP nos postos (quem confere, quem aprova).
 - [ ] Critério de “bateu”: tolerância de centavos? obrigatório justificar divergência?

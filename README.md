@@ -38,3 +38,15 @@ Sem Docker (ex.: virtualizacao desativada), use qualquer PostgreSQL 16 local com
 `conferencia` / senha `conferencia_dev` (valores de `infra/.env.example`).
 
 Login de desenvolvimento (com `SEED_DEMO_USERS=true` tambem existem `fiscal@` e `tesouraria@conferencia.local`, mesma senha): `admin@conferencia.local` / `admin123`.
+
+### WebPosto (postos)
+
+No `server/.env`:
+
+```env
+WEBPOSTO_BASE_URL=https://web.qualityautomacao.com.br
+WEBPOSTO_CHAVE=sua_chave_aqui
+```
+
+Reinicie a API. No app: **Caixas do dia** → **Sincronizar WebPosto** (usa a data da barra superior).
+Detalhes: `docs/integracoes/webposto.md`.

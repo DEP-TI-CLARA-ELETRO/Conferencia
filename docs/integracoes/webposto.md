@@ -14,7 +14,7 @@ Especificação OpenAPI oficial (exportada): [`webposto-openapi.json`](webposto-
 | Servidor documentado | `http://web.qualityautomacao.com.br` |
 | Prefixo das rotas | `/INTEGRACAO/V1/...` (há algumas em `/INTEGRACAO/` e V2) |
 | Volume | ~157 paths (posto completo; MVP usa só um subconjunto) |
-| Autenticação | Token do contrato (detalhe do header/query a confirmar na 1ª chamada real) |
+| Autenticação | Query **`chave=<token>`** em todas as chamadas (chave de API Integração no WebPosto) |
 
 Paginação típica: `ultimoCodigo` + `limite` (máx. 2000). Resposta comum: `{ "ultimoCodigo": ..., "resultados": [ ... ] }`.
 
@@ -86,12 +86,30 @@ CAIXAS_APRESENTADO    → linhas apresentado × apurado × diferença
 
 Conector previsto na modelagem: `webposto`.
 
+## Como usar neste projeto
+
+1. No WebPosto: Administração → Integrações → **API Integração** → copiar a chave.
+2. Em `server/.env` (e `infra/.env.example` como modelo):
+
+```env
+WEBPOSTO_BASE_URL=https://web.qualityautomacao.com.br
+WEBPOSTO_CHAVE=cole_a_chave_aqui
+```
+
+3. Reinicie a API (`dart run bin/server.dart`).
+4. No app: **Caixas do dia** → **Sincronizar WebPosto** (data da barra superior).
+
+Endpoints internos:
+- `GET /webposto/status` — se a chave está configurada
+- `POST /webposto/sync` — body `{ "date": "yyyy-MM-dd" }`
+- `GET /closings?date=yyyy-MM-dd` — lista importada
+
 ## Pendências técnicas
 
-- [ ] Confirmar como o **token** é enviado (header, query, etc.) com um smoke test autenticado.
-- [ ] Guardar base URL + token só em variáveis de ambiente.
-- [ ] Validar com 1 posto real: `CAIXAS` + `CAIXAS_APRESENTADO` no mesmo dia/turno.
-- [ ] Definir se “apresentado” no WebPosto é o nosso “esperado” e se a conferência humana ainda edita “conferido” ou só valida o `apurado` já existente.
+- [x] Autenticação: query `chave=`
+- [x] Guardar base URL + chave só em `.env`
+- [ ] Validar com 1 posto real: sync do dia + conferência na UI
+- [ ] Definir se a conferência humana ainda edita “conferido” ou só valida o `apurado` do WebPosto
 
 ## Histórico
 
