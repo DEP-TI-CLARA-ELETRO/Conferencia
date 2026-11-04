@@ -39,3 +39,15 @@ class SelectedDate extends Notifier<DateTime> {
 
   void select(DateTime d) => state = DateTime(d.year, d.month, d.day);
 }
+
+/// Sidebar desktop recolhida (só ícones) ou expandida.
+final sidebarCollapsedProvider =
+    NotifierProvider<SidebarCollapsed, bool>(SidebarCollapsed.new);
+
+class SidebarCollapsed extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void toggle() => state = !state;
+  void set(bool value) => state = value;
+}

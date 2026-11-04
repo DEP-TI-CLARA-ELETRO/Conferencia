@@ -35,12 +35,19 @@ class AppShell extends ConsumerWidget {
       ),
     );
 
+    final collapsed = ref.watch(sidebarCollapsedProvider);
+
     if (wide) {
       return Scaffold(
         backgroundColor: AppColors.background,
         body: Row(
           children: [
-            _Sidebar(items: items, location: location),
+            _Sidebar(
+              items: items,
+              location: location,
+              collapsed: collapsed,
+              onToggleCollapse: () => ref.read(sidebarCollapsedProvider.notifier).toggle(),
+            ),
             Expanded(
               child: Column(
                 children: [
@@ -69,7 +76,12 @@ class AppShell extends ConsumerWidget {
       drawer: Drawer(
         width: 272,
         backgroundColor: AppColors.sidebar,
-        child: _Sidebar(items: items, location: location, closeOnTap: true),
+        child: _Sidebar(
+          items: items,
+          location: location,
+          closeOnTap: true,
+          collapsed: false,
+        ),
       ),
       body: content,
     );
@@ -77,16 +89,29 @@ class AppShell extends ConsumerWidget {
 }
 
 class _Sidebar extends StatelessWidget {
-  const _Sidebar({required this.items, required this.location, this.closeOnTap = false});
+  const _Sidebar({
+    required this.items,
+    required this.location,
+    this.closeOnTap = false,
+    this.collapsed = false,
+    this.onToggleCollapse,
+  });
 
   final List<NavItem> items;
   final String location;
   final bool closeOnTap;
+  final bool collapsed;
+  final VoidCallback? onToggleCollapse;
+
+  static const _expandedWidth = 248.0;
+  static const _collapsedWidth = 76.0;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 248,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      width: collapsed ? _collapsedWidth : _expandedWidth,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -96,49 +121,63 @@ class _Sidebar extends StatelessWidget {
       ),
       child: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 24, 20, 28),
-              child: Row(
-                children: [
-                  _Logo(),
-                  SizedBox(width: 12),
-                  Flexible(
-                    child: Text(
-                      'Conferência',
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-              child: Text(
-                'MENU',
-                style: TextStyle(
-                  color: AppColors.sidebarText.withValues(alpha: 0.55),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.1,
+              padding: EdgeInsets.fromLTRB(collapsed ? 12 : 16, 20, collapsed ? 12 : 12, 20),
+              child: collapsed
+                  ? Column(
+                      children: [
+                        const _Logo(),
+                        if (onToggleCollapse != null) ...[
+                          const SizedBox(height: 12),
+                          _CollapseButton(collapsed: true, onTap: onToggleCollapse!),
+                        ],
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        const _Logo(),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'Conferência',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                        ),
+                        if (onToggleCollapse != null)
+                          _CollapseButton(collapsed: false, onTap: onToggleCollapse!),
+                      ],
+                    ),
+            ),
+            if (!collapsed)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                child: Text(
+                  'MENU',
+                  style: TextStyle(
+                    color: AppColors.sidebarText.withValues(alpha: 0.55),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.1,
+                  ),
                 ),
               ),
-            ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: EdgeInsets.symmetric(horizontal: collapsed ? 10 : 12),
                 children: [
                   for (final item in items)
                     _NavTile(
                       item: item,
                       selected: location == item.path || location.startsWith('${item.path}/'),
+                      collapsed: collapsed,
                       onTap: () {
                         if (closeOnTap) Navigator.of(context).pop();
                         context.go(item.path);
@@ -147,18 +186,52 @@ class _Sidebar extends StatelessWidget {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-              child: Text(
-                'Grupo Clara',
-                style: TextStyle(
-                  color: AppColors.sidebarText.withValues(alpha: 0.45),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+            if (!collapsed)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                child: Text(
+                  'Grupo Clara',
+                  style: TextStyle(
+                    color: AppColors.sidebarText.withValues(alpha: 0.45),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-            ),
+              )
+            else
+              const SizedBox(height: 16),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CollapseButton extends StatelessWidget {
+  const _CollapseButton({required this.collapsed, required this.onTap});
+
+  final bool collapsed;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: collapsed ? 'Expandir menu' : 'Recolher menu',
+      child: Material(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: SizedBox(
+            width: collapsed ? 40 : 36,
+            height: collapsed ? 40 : 36,
+            child: Icon(
+              collapsed ? Icons.chevron_right_rounded : Icons.chevron_left_rounded,
+              color: AppColors.sidebarText,
+              size: 22,
+            ),
+          ),
         ),
       ),
     );
@@ -190,64 +263,82 @@ class _Logo extends StatelessWidget {
 }
 
 class _NavTile extends StatelessWidget {
-  const _NavTile({required this.item, required this.selected, required this.onTap});
+  const _NavTile({
+    required this.item,
+    required this.selected,
+    required this.onTap,
+    this.collapsed = false,
+  });
 
   final NavItem item;
   final bool selected;
   final VoidCallback onTap;
+  final bool collapsed;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Material(
-        color: selected ? AppColors.sidebarMuted : Colors.transparent,
+    final icon = Icon(
+      selected ? item.selectedIcon : item.icon,
+      size: 20,
+      color: selected ? AppColors.primarySoft : AppColors.sidebarText,
+    );
+
+    final tile = Material(
+      color: selected ? AppColors.sidebarMuted : Colors.transparent,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: selected
-                  ? Border.all(color: AppColors.primaryHover.withValues(alpha: 0.35))
-                  : null,
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  selected ? item.selectedIcon : item.icon,
-                  size: 20,
-                  color: selected ? AppColors.primarySoft : AppColors.sidebarText,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    item.label,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: selected ? AppColors.sidebarTextActive : AppColors.sidebarText,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-                if (selected)
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryHover,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-              ],
-            ),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: EdgeInsets.symmetric(
+            horizontal: collapsed ? 0 : 12,
+            vertical: 12,
           ),
+          alignment: collapsed ? Alignment.center : Alignment.centerLeft,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: selected
+                ? Border.all(color: AppColors.primaryHover.withValues(alpha: 0.35))
+                : null,
+          ),
+          child: collapsed
+              ? icon
+              : Row(
+                  children: [
+                    icon,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        item.label,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: selected ? AppColors.sidebarTextActive : AppColors.sidebarText,
+                          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    if (selected)
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primaryHover,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                  ],
+                ),
         ),
       ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: collapsed
+          ? Tooltip(message: item.label, waitDuration: const Duration(milliseconds: 400), child: tile)
+          : tile,
     );
   }
 }
