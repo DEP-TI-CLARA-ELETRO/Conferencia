@@ -9,6 +9,8 @@ Sistema para acompanhar caixas fechados e conferir valores apresentados x apurad
 - `shared/` pacote Dart compartilhado (enums e DTOs)
 - `infra/` Docker (PostgreSQL) e migrations SQL
 - `docs/referencias/` imagens de referencia do gerente
+- `docs/negocio.md` contexto do Grupo Clara, ERPs e escopo do MVP
+- `docs/integracoes/` WebPosto (OpenAPI + resumo das rotas de caixa)
 
 ## Ambiente de desenvolvimento
 
