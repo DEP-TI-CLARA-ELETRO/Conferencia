@@ -124,22 +124,14 @@ class _Sidebar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: EdgeInsets.fromLTRB(collapsed ? 12 : 16, 20, collapsed ? 12 : 12, 20),
+              padding: EdgeInsets.fromLTRB(collapsed ? 12 : 20, 24, collapsed ? 12 : 20, 24),
               child: collapsed
-                  ? Column(
+                  ? const Center(child: _Logo())
+                  : const Row(
                       children: [
-                        const _Logo(),
-                        if (onToggleCollapse != null) ...[
-                          const SizedBox(height: 12),
-                          _CollapseButton(collapsed: true, onTap: onToggleCollapse!),
-                        ],
-                      ],
-                    )
-                  : Row(
-                      children: [
-                        const _Logo(),
-                        const SizedBox(width: 12),
-                        const Expanded(
+                        _Logo(),
+                        SizedBox(width: 12),
+                        Expanded(
                           child: Text(
                             'Conferência',
                             overflow: TextOverflow.ellipsis,
@@ -151,8 +143,6 @@ class _Sidebar extends StatelessWidget {
                             ),
                           ),
                         ),
-                        if (onToggleCollapse != null)
-                          _CollapseButton(collapsed: false, onTap: onToggleCollapse!),
                       ],
                     ),
             ),
@@ -186,9 +176,14 @@ class _Sidebar extends StatelessWidget {
                 ],
               ),
             ),
+            if (onToggleCollapse != null)
+              Padding(
+                padding: EdgeInsets.fromLTRB(collapsed ? 10 : 12, 8, collapsed ? 10 : 12, 12),
+                child: _CollapseButton(collapsed: collapsed, onTap: onToggleCollapse!),
+              ),
             if (!collapsed)
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
                 child: Text(
                   'Grupo Clara',
                   style: TextStyle(
@@ -199,7 +194,7 @@ class _Sidebar extends StatelessWidget {
                 ),
               )
             else
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
           ],
         ),
       ),
@@ -215,24 +210,32 @@ class _CollapseButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: collapsed ? 'Expandir menu' : 'Recolher menu',
-      child: Material(
-        color: Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
-          child: SizedBox(
-            width: collapsed ? 40 : 36,
-            height: collapsed ? 40 : 36,
-            child: Icon(
-              collapsed ? Icons.chevron_right_rounded : Icons.chevron_left_rounded,
-              color: AppColors.sidebarText,
-              size: 22,
-            ),
-          ),
+    if (collapsed) {
+      return IconButton(
+        tooltip: 'Expandir menu',
+        onPressed: onTap,
+        style: IconButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: Colors.white.withValues(alpha: 0.10),
+          minimumSize: const Size(48, 48),
         ),
+        icon: const Icon(Icons.keyboard_double_arrow_right_rounded),
+      );
+    }
+
+    return TextButton.icon(
+      onPressed: onTap,
+      style: TextButton.styleFrom(
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.white.withValues(alpha: 0.10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        alignment: Alignment.centerLeft,
+      ),
+      icon: const Icon(Icons.keyboard_double_arrow_left_rounded, size: 20),
+      label: const Text(
+        'Recolher menu',
+        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
       ),
     );
   }
