@@ -73,8 +73,14 @@ class AuthController extends Notifier<AuthState> {
           ? const AuthState(status: AuthStatus.unauthenticated)
           : AuthState(status: AuthStatus.authenticated, user: user);
     } on ApiException catch (e) {
-      // catch só de ApiException
       state = AuthState(status: AuthStatus.unauthenticated, error: e.message);
+    } catch (e) {
+      // Qualquer outro erro (parse, rede crua, etc.) não pode deixar
+      // o app eterno em /carregando (AuthStatus.unknown).
+      state = AuthState(
+        status: AuthStatus.unauthenticated,
+        error: e is ApiException ? e.message : 'Nao foi possivel validar a sessao.',
+      );
     }
   }
 

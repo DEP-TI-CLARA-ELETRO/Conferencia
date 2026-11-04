@@ -37,7 +37,7 @@ class ClosingsRepository {
         FROM cash_closings c
         JOIN stores s ON s.id = c.store_id
         WHERE c.movement_date = @day::date
-          AND (@store IS NULL OR c.store_id = @store)
+          AND (@store::int IS NULL OR c.store_id = @store::int)
         ORDER BY s.name, c.external_caixa_codigo, c.shift_code NULLS LAST
       '''),
       parameters: {'day': day, 'store': storeId},
@@ -66,11 +66,18 @@ class ClosingsRepository {
         closedAt: (r[10] as DateTime?)?.toUtc().toIso8601String(),
         closed: r[11] as bool,
         consolidated: r[12] as bool,
-        apurado: (r[13] as num?)?.toDouble(),
-        diferenca: (r[14] as num?)?.toDouble(),
+        apurado: _asDouble(r[13]),
+        diferenca: _asDouble(r[14]),
         stage: r[15] as String,
         paymentBreakdown: breakdown,
       );
     }).toList();
+  }
+
+  static double? _asDouble(Object? value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
   }
 }

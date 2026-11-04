@@ -3,19 +3,31 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
-/// Monta o ThemeData (aparência global) do Material 3.
+/// ThemeData global — tipografia Plus Jakarta Sans, cantos suaves, pouco ruído.
 abstract final class AppTheme {
-  static const radius = 14.0; // canto arredondado padrão dos cards
+  static const radius = 16.0;
+  static const radiusSm = 12.0;
+
+  static List<BoxShadow> get softShadow => [
+        BoxShadow(
+          color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+          blurRadius: 24,
+          offset: const Offset(0, 8),
+        ),
+        BoxShadow(
+          color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
+        ),
+      ];
 
   static ThemeData light() {
-    // ColorScheme.fromSeed gera uma família de cores a partir de uma semente
     final scheme = ColorScheme.fromSeed(
       seedColor: AppColors.primary,
-      brightness: Brightness.light, // tema claro
+      brightness: Brightness.light,
     ).copyWith(
-      // Ajustamos na mão o que queremos fixo
       primary: AppColors.primary,
-      onPrimary: Colors.white, // texto/ícone em cima do primary
+      onPrimary: Colors.white,
       surface: AppColors.surface,
       onSurface: AppColors.text,
       error: AppColors.danger,
@@ -27,28 +39,39 @@ abstract final class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: AppColors.background,
       dividerColor: AppColors.divider,
-      splashFactory: InkRipple.splashFactory, // efeito de toque
+      splashFactory: InkRipple.splashFactory,
     );
 
-    // Tipografia Inter em cima do textTheme padrão
-    final text = GoogleFonts.interTextTheme(base.textTheme).apply(
+    final text = GoogleFonts.plusJakartaSansTextTheme(base.textTheme).apply(
       bodyColor: AppColors.text,
       displayColor: AppColors.text,
     );
 
-    // Função local que cria borda de input com uma cor
-    OutlineInputBorder border(Color c) => OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: c),
+    OutlineInputBorder border(Color c, {double width = 1}) => OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radiusSm),
+          borderSide: BorderSide(color: c, width: width),
         );
 
-    // copyWith = "pegue o tema base e troque só estas partes"
     return base.copyWith(
-      textTheme: text,
-      dividerTheme: const DividerThemeData(color: AppColors.divider, space: 1, thickness: 1),
+      textTheme: text.copyWith(
+        headlineLarge: text.headlineLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.8,
+        ),
+        headlineMedium: text.headlineMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.6,
+        ),
+        titleLarge: text.titleLarge?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.3),
+      ),
+      dividerTheme: const DividerThemeData(
+        color: AppColors.divider,
+        space: 1,
+        thickness: 1,
+      ),
       cardTheme: CardThemeData(
         color: AppColors.surface,
-        elevation: 0, // sem sombra pesada
+        elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radius),
@@ -57,31 +80,34 @@ abstract final class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        fillColor: AppColors.surfaceMuted,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: border(AppColors.border),
         enabledBorder: border(AppColors.border),
-        focusedBorder: border(AppColors.primary), // foco = borda azul
+        focusedBorder: border(AppColors.primary, width: 1.5),
         errorBorder: border(AppColors.danger),
-        focusedErrorBorder: border(AppColors.danger),
+        focusedErrorBorder: border(AppColors.danger, width: 1.5),
         labelStyle: const TextStyle(color: AppColors.textSecondary),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          minimumSize: const Size(0, 46), // altura mínima do botão
+          minimumSize: const Size(0, 48),
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusSm)),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, letterSpacing: -0.1),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.text,
-          minimumSize: const Size(0, 42),
+          backgroundColor: AppColors.surface,
+          minimumSize: const Size(0, 44),
           side: const BorderSide(color: AppColors.border),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusSm)),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -89,13 +115,19 @@ abstract final class AppTheme {
       ),
       popupMenuTheme: PopupMenuThemeData(
         color: Colors.white,
-        elevation: 6,
+        elevation: 8,
+        shadowColor: const Color(0xFF0F172A).withValues(alpha: 0.12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           side: const BorderSide(color: AppColors.border),
         ),
       ),
-      drawerTheme: const DrawerThemeData(backgroundColor: Colors.white),
+      drawerTheme: const DrawerThemeData(backgroundColor: AppColors.sidebar),
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: AppColors.surface,
+        headerBackgroundColor: AppColors.primaryMuted,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
     );
   }
 }
