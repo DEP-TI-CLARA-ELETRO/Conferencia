@@ -86,6 +86,34 @@ class ClosingsRepository {
     }).toList();
   }
 
+  /// Cabeçalho local + código da empresa no WebPosto, para o painel do caixa.
+  Future<ClosingPanelSource?> findPanelSource(String id) async {
+    final rows = await _db.execute(
+      Sql.named('''
+        SELECT
+          c.store_id,
+          s.external_code,
+          c.external_caixa_codigo,
+          c.movement_date::text,
+          c.employee_code
+        FROM cash_closings c
+        JOIN stores s ON s.id = c.store_id
+        WHERE c.id = @id::uuid
+      '''),
+      parameters: {'id': id},
+    );
+    if (rows.isEmpty) return null;
+    final ext = rows.first[1] as String?;
+    final day = rows.first[3] as String;
+    return ClosingPanelSource(
+      storeId: rows.first[0] as int,
+      empresaCodigo: int.tryParse(ext ?? ''),
+      caixaCodigo: rows.first[2] as int,
+      movementDate: day.length >= 10 ? day.substring(0, 10) : day,
+      employeeCode: rows.first[4] as int?,
+    );
+  }
+
   static String _ymd(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
@@ -95,4 +123,20 @@ class ClosingsRepository {
     if (value is String) return double.tryParse(value);
     return null;
   }
+}
+
+class ClosingPanelSource {
+  const ClosingPanelSource({
+    required this.storeId,
+    required this.empresaCodigo,
+    required this.caixaCodigo,
+    required this.movementDate,
+    required this.employeeCode,
+  });
+
+  final int storeId;
+  final int? empresaCodigo;
+  final int caixaCodigo;
+  final String movementDate;
+  final int? employeeCode;
 }

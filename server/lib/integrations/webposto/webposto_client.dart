@@ -89,6 +89,36 @@ class WebpostoClient {
         'tipoData': 'EMISSAO',
       });
 
+  Future<List<Map<String, dynamic>>> vendas({
+    required String dataInicial,
+    required String dataFinal,
+    required int empresaCodigo,
+  }) =>
+      fetchAll('/INTEGRACAO/V1/VENDAS', query: {
+        'dataInicial': dataInicial,
+        'dataFinal': dataFinal,
+        'empresaCodigo': '$empresaCodigo',
+        'situacao': 'T',
+      });
+
+  Future<List<Map<String, dynamic>>> vendasFormaPagamento({
+    required String dataInicial,
+    required String dataFinal,
+    required int empresaCodigo,
+  }) =>
+      fetchAll('/INTEGRACAO/V1/VENDAS_FORMA_PAGAMENTO', query: {
+        'dataInicial': dataInicial,
+        'dataFinal': dataFinal,
+        'empresaCodigo': '$empresaCodigo',
+        'situacao': 'T',
+      });
+
+  Future<List<Map<String, dynamic>>> funcionarios({int? funcionarioCodigo}) {
+    final q = <String, String>{};
+    if (funcionarioCodigo != null) q['funcionarioCodigo'] = '$funcionarioCodigo';
+    return fetchAll('/INTEGRACAO/V1/FUNCIONARIOS', query: q);
+  }
+
   void close() => _http.close();
 }
 

@@ -22,14 +22,29 @@ class ClosingsRepository {
         queryParameters: {
           'dateFrom': _ymd(from),
           'dateTo': _ymd(to),
-          if (storeId != null) 'storeId': storeId,
-          if (businessUnit != null) 'businessUnit': businessUnit.code,
+          ?'storeId': storeId,
+          ?'businessUnit': businessUnit?.code,
         },
       );
       final items = (res.data as Map)['items'] as List? ?? [];
       return items
           .map((e) => ClosingDto.fromJson(e as Map<String, dynamic>))
           .toList();
+    } catch (e) {
+      throw ApiException.from(e);
+    }
+  }
+
+  Future<ClosingDetailDto> detail(String id) async {
+    try {
+      final res = await _api.dio.get(
+        '/closings/$id/detail',
+        options: Options(
+          sendTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 90),
+        ),
+      );
+      return ClosingDetailDto.fromJson(res.data as Map<String, dynamic>);
     } catch (e) {
       throw ApiException.from(e);
     }

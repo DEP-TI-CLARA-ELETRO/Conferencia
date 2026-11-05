@@ -6,6 +6,7 @@ import 'package:shared/shared.dart';
 import '../../core/theme/app_colors.dart';
 import '../auth/auth_controller.dart';
 import 'filter_controls.dart';
+import 'group_backdrop.dart';
 import 'nav_items.dart';
 import 'shell_providers.dart';
 
@@ -35,6 +36,10 @@ class AppShell extends ConsumerWidget {
     );
 
     final collapsed = ref.watch(sidebarCollapsedProvider);
+    final store = ref.watch(selectedStoreProvider);
+    final unit = ref.watch(selectedBusinessUnitProvider);
+    final brand = store?.businessUnit ?? unit;
+    final body = GroupBackdrop(unit: brand, child: content);
 
     if (wide) {
       return Scaffold(
@@ -51,7 +56,7 @@ class AppShell extends ConsumerWidget {
               child: Column(
                 children: [
                   _TopBar(user: user, wide: true),
-                  Expanded(child: content),
+                  Expanded(child: body),
                 ],
               ),
             ),
@@ -82,7 +87,7 @@ class AppShell extends ConsumerWidget {
           collapsed: false,
         ),
       ),
-      body: content,
+      body: body,
     );
   }
 }

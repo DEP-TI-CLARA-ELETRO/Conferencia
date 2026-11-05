@@ -9,6 +9,7 @@ import 'integrations/webposto/webposto_sync_service.dart';
 import 'middleware/error_middleware.dart';
 import 'modules/auth/auth_repository.dart';
 import 'modules/auth/auth_routes.dart';
+import 'modules/closings/closing_detail_service.dart';
 import 'modules/closings/closings_repository.dart';
 import 'modules/closings/closings_routes.dart';
 import 'modules/health/health_routes.dart';
@@ -22,11 +23,20 @@ Handler buildHandler(AppConfig config, Pool<void> db, AuthRepository authRepo) {
   );
   final webpostoSync = WebpostoSyncService(db, webpostoClient);
   final closingsRepo = ClosingsRepository(db);
+  final closingDetail = ClosingDetailService(webpostoClient);
 
   final root = Router()
     ..mount('/health', HealthRoutes(db).router.call)
     ..mount('/auth', AuthRoutes(authRepo, config).router.call)
-    ..mount('/closings', ClosingsRoutes(closingsRepo, authRepo).router.call)
+    ..mount(
+      '/closings',
+      ClosingsRoutes(
+        closingsRepo,
+        authRepo,
+        closingDetail,
+        webpostoConfigured: config.webpostoConfigured,
+      ).router.call,
+    )
     ..mount('/webposto', WebpostoRoutes(config, authRepo, webpostoSync).router.call);
 
   return Pipeline()

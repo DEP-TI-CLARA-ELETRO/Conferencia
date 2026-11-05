@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/brand_scope.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/kpi_tile.dart';
@@ -93,9 +94,15 @@ class HomePage extends ConsumerWidget {
         const SizedBox(height: 24),
         const _StageProgress(),
         const SizedBox(height: 14),
-        const Text(
+        Text(
           'Dados de exemplo, apenas para validar o layout.',
-          style: TextStyle(color: AppColors.textTertiary, fontSize: 12, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            color: BrandScope.unitOf(context) == BusinessUnit.posto
+                ? const Color(0xFFFFE4E6)
+                : AppColors.textTertiary,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );

@@ -5,13 +5,16 @@ import 'package:shelf_router/shelf_router.dart';
 import '../../core/http.dart';
 import '../../middleware/auth_middleware.dart';
 import '../auth/auth_repository.dart';
+import 'closing_detail_service.dart';
 import 'closings_repository.dart';
 
 class ClosingsRoutes {
-  ClosingsRoutes(this._repo, this._authRepo);
+  ClosingsRoutes(this._repo, this._authRepo, this._detail, {required this.webpostoConfigured});
 
   final ClosingsRepository _repo;
   final AuthRepository _authRepo;
+  final ClosingDetailService _detail;
+  final bool webpostoConfigured;
 
   Router get router {
     final r = Router();
@@ -20,7 +23,48 @@ class ClosingsRoutes {
         .addMiddleware(requirePermission(Permission.closingsView));
 
     r.get('/', pipe.addHandler(_list));
+    r.get('/<id>/detail', pipe.addHandler(_detailOf));
     return r;
+  }
+
+  Future<Response> _detailOf(Request request) async {
+    final id = request.params['id'] ?? '';
+    if (!RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(id)) {
+      return jsonError(400, 'Caixa invalido', code: 'invalid_request');
+    }
+
+    ClosingPanelSource? source;
+    try {
+      source = await _repo.findPanelSource(id);
+    } catch (_) {
+      return jsonError(400, 'Caixa invalido', code: 'invalid_request');
+    }
+    if (source == null) {
+      return jsonError(404, 'Caixa nao encontrado', code: 'not_found');
+    }
+    final panel = source;
+
+    final user = request.user;
+    final isAdmin = user.roles.contains(Role.admin) || user.can(Permission.usersManage);
+    if (!isAdmin && !user.stores.any((s) => s.id == panel.storeId)) {
+      return jsonError(403, 'Sem acesso a esta loja', code: 'forbidden');
+    }
+
+    if (!webpostoConfigured || panel.empresaCodigo == null) {
+      return jsonOk(
+        const ClosingDetailDto(
+          warning: 'WebPosto nao configurado. O resumo local continua disponivel.',
+        ).toJson(),
+      );
+    }
+
+    final detail = await _detail.load(
+      caixaCodigo: panel.caixaCodigo,
+      movementDate: panel.movementDate,
+      empresaCodigo: panel.empresaCodigo!,
+      employeeCode: panel.employeeCode,
+    );
+    return jsonOk(detail.toJson());
   }
 
   Future<Response> _list(Request request) async {

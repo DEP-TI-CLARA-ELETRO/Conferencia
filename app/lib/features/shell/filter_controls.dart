@@ -7,6 +7,20 @@ import '../../core/theme/app_theme.dart';
 import '../../core/utils/formatters.dart';
 import 'shell_providers.dart';
 
+IconData iconForUnit(BusinessUnit? unit) => switch (unit) {
+      BusinessUnit.posto => Icons.local_gas_station_rounded,
+      BusinessUnit.mercado => Icons.local_grocery_store_rounded,
+      BusinessUnit.materiais => Icons.hardware_rounded,
+      BusinessUnit.presentes => Icons.card_giftcard_rounded,
+      BusinessUnit.distribuicao => Icons.local_shipping_rounded,
+      BusinessUnit.outros => Icons.storefront_outlined,
+      null => Icons.category_outlined,
+    };
+
+/// Postos usam o vermelho da rede. Os demais grupos ficam na cor do sistema.
+Color colorForUnit(BusinessUnit? unit) =>
+    unit == BusinessUnit.posto ? AppColors.danger : AppColors.primary;
+
 /// Controles compactos da barra superior: grupo, loja e período.
 class TopFilterControls extends ConsumerWidget {
   const TopFilterControls({super.key, this.compact = false});
@@ -22,12 +36,14 @@ class TopFilterControls extends ConsumerWidget {
 
     final storeLabel = store?.name ??
         (unit == null ? 'Todas as lojas' : 'Todas · ${unit.shortLabel}');
+    final storeIcon = store != null ? iconForUnit(store.businessUnit) : iconForUnit(unit);
 
     return Row(
       children: [
         Flexible(
           child: _MenuPill<String>(
-            icon: Icons.category_outlined,
+            icon: iconForUnit(unit),
+            iconColor: unit == null ? AppColors.textSecondary : colorForUnit(unit),
             label: unit?.shortLabel ?? 'Todos os grupos',
             menuBuilder: (context) => [
               PopupMenuItem<String>(
@@ -44,6 +60,8 @@ class TopFilterControls extends ConsumerWidget {
                   child: _CheckedItem(
                     checked: unit == u,
                     label: u.label,
+                    mark: iconForUnit(u),
+                    markColor: colorForUnit(u),
                   ),
                 ),
             ],
@@ -58,7 +76,10 @@ class TopFilterControls extends ConsumerWidget {
         Flexible(
           flex: compact ? 1 : 2,
           child: _TapPill(
-            icon: Icons.storefront_outlined,
+            icon: storeIcon,
+            iconColor: store != null
+                ? colorForUnit(store.businessUnit)
+                : (unit == null ? AppColors.textSecondary : colorForUnit(unit)),
             label: storeLabel,
             onTap: () => _openStorePicker(context, ref),
           ),
@@ -109,10 +130,17 @@ class TopFilterControls extends ConsumerWidget {
 }
 
 class _CheckedItem extends StatelessWidget {
-  const _CheckedItem({required this.checked, required this.label});
+  const _CheckedItem({
+    required this.checked,
+    required this.label,
+    this.mark,
+    this.markColor,
+  });
 
   final bool checked;
   final String label;
+  final IconData? mark;
+  final Color? markColor;
 
   @override
   Widget build(BuildContext context) {
@@ -124,6 +152,10 @@ class _CheckedItem extends StatelessWidget {
           color: checked ? AppColors.primary : AppColors.textTertiary,
         ),
         const SizedBox(width: 10),
+        if (mark != null) ...[
+          Icon(mark, size: 18, color: markColor ?? AppColors.primary),
+          const SizedBox(width: 8),
+        ],
         Expanded(child: Text(label)),
       ],
     );
@@ -136,9 +168,11 @@ class _MenuPill<T> extends StatelessWidget {
     required this.label,
     required this.menuBuilder,
     required this.onSelected,
+    this.iconColor,
   });
 
   final IconData icon;
+  final Color? iconColor;
   final String label;
   final List<PopupMenuEntry<T>> Function(BuildContext context) menuBuilder;
   final ValueChanged<T> onSelected;
@@ -149,7 +183,7 @@ class _MenuPill<T> extends StatelessWidget {
       tooltip: '',
       onSelected: onSelected,
       itemBuilder: menuBuilder,
-      child: _PillShell(icon: icon, label: label),
+      child: _PillShell(icon: icon, label: label, iconColor: iconColor),
     );
   }
 }
@@ -159,9 +193,11 @@ class _TapPill extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.iconColor,
   });
 
   final IconData icon;
+  final Color? iconColor;
   final String label;
   final VoidCallback onTap;
 
@@ -170,15 +206,16 @@ class _TapPill extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-      child: _PillShell(icon: icon, label: label),
+      child: _PillShell(icon: icon, label: label, iconColor: iconColor),
     );
   }
 }
 
 class _PillShell extends StatelessWidget {
-  const _PillShell({required this.icon, required this.label});
+  const _PillShell({required this.icon, required this.label, this.iconColor});
 
   final IconData icon;
+  final Color? iconColor;
   final String label;
 
   @override
@@ -193,7 +230,7 @@ class _PillShell extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: AppColors.textSecondary),
+          Icon(icon, size: 16, color: iconColor ?? AppColors.textSecondary),
           const SizedBox(width: 8),
           Flexible(
             child: Text(
@@ -320,14 +357,20 @@ class _StorePickerDialogState extends State<_StorePickerDialog> {
                             children: [
                               Padding(
                                 padding: const EdgeInsets.fromLTRB(0, 14, 0, 6),
-                                child: Text(
-                                  unit.label.toUpperCase(),
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.8,
-                                    color: AppColors.textTertiary,
-                                  ),
+                                child: Row(
+                                  children: [
+                                    Icon(iconForUnit(unit), size: 14, color: colorForUnit(unit)),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      unit.label.toUpperCase(),
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.8,
+                                        color: AppColors.textTertiary,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               for (final s in list)
@@ -341,9 +384,22 @@ class _StorePickerDialogState extends State<_StorePickerDialog> {
                                         ? AppColors.primary
                                         : AppColors.textTertiary,
                                   ),
-                                  title: Text(
-                                    s.name,
-                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                  title: Row(
+                                    children: [
+                                      Icon(
+                                        iconForUnit(s.businessUnit),
+                                        size: 16,
+                                        color: colorForUnit(s.businessUnit),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          s.name,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   subtitle: Text('${s.code} · ${s.businessUnit.shortLabel}'),
                                   onTap: () => Navigator.pop(context, s.id),

@@ -9,6 +9,7 @@ import '../../core/widgets/app_card.dart';
 import '../../core/widgets/page_header.dart';
 import '../../core/widgets/status_chip.dart';
 import '../shell/shell_providers.dart';
+import 'closing_detail_dialog.dart';
 import 'closings_controller.dart';
 
 enum _SortColumn { apurado, diferenca, situacao }
@@ -182,7 +183,16 @@ class _ClosingsPageState extends ConsumerState<ClosingsPage> {
                 ),
                 for (final (i, item) in _sorted(ui.items).indexed) ...[
                   if (i > 0) const Divider(height: 1, color: AppColors.divider),
-                  _ClosingRow(item),
+                  _ClosingRow(
+                    item,
+                    onTap: () => showDialog<void>(
+                      context: context,
+                      builder: (_) => ClosingDetailDialog(
+                        closing: item,
+                        load: () => ref.read(closingsRepositoryProvider).detail(item.id),
+                      ),
+                    ),
+                  ),
                 ],
               ],
             ),
@@ -418,8 +428,9 @@ class _CountPill extends StatelessWidget {
 }
 
 class _ClosingRow extends StatelessWidget {
-  const _ClosingRow(this.c);
+  const _ClosingRow(this.c, {required this.onTap});
   final ClosingDto c;
+  final VoidCallback onTap;
 
   _BoxKind get _kind => _kindOf(c);
 
@@ -491,9 +502,12 @@ class _ClosingRow extends StatelessWidget {
     final (accent, wash) = _paint;
 
     if (wide) {
-      return DecoratedBox(
+      return Material(
+        color: wash.withValues(alpha: _kind == _BoxKind.divergent ? 0.72 : 0.45),
+        child: InkWell(
+          onTap: onTap,
+          child: DecoratedBox(
         decoration: BoxDecoration(
-          color: wash.withValues(alpha: _kind == _BoxKind.divergent ? 0.72 : 0.45),
           border: Border(left: BorderSide(color: accent, width: 4)),
         ),
         child: Padding(
@@ -528,57 +542,64 @@ class _ClosingRow extends StatelessWidget {
           ],
         ),
         ),
+          ),
+        ),
       );
     }
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: wash.withValues(alpha: 0.55),
-        border: Border(left: BorderSide(color: accent, width: 4)),
-      ),
-      child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [Expanded(child: title), const SizedBox(width: 8), chip]),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceMuted,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Material(
+      color: wash.withValues(alpha: 0.55),
+      child: InkWell(
+        onTap: onTap,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border(left: BorderSide(color: accent, width: 4)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Apurado', style: TextStyle(color: AppColors.textTertiary, fontSize: 11)),
-                    const SizedBox(height: 2),
-                    Text(
-                      c.apurado == null ? '—' : formatMoney(c.apurado!),
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                    ),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    const Text('Diferença', style: TextStyle(color: AppColors.textTertiary, fontSize: 11)),
-                    const SizedBox(height: 2),
-                    Text(
-                      diffText,
-                      style: TextStyle(color: diffColor, fontWeight: FontWeight.w700, fontSize: 15),
-                    ),
-                  ],
+                Row(children: [Expanded(child: title), const SizedBox(width: 8), chip]),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceMuted,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Apurado', style: TextStyle(color: AppColors.textTertiary, fontSize: 11)),
+                          const SizedBox(height: 2),
+                          Text(
+                            c.apurado == null ? '—' : formatMoney(c.apurado!),
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text('Diferença', style: TextStyle(color: AppColors.textTertiary, fontSize: 11)),
+                          const SizedBox(height: 2),
+                          Text(
+                            diffText,
+                            style: TextStyle(color: diffColor, fontWeight: FontWeight.w700, fontSize: 15),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        ),
       ),
     );
   }
