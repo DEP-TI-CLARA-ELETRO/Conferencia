@@ -4,9 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shared/shared.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_theme.dart';
-import '../../core/utils/formatters.dart';
 import '../auth/auth_controller.dart';
+import 'filter_controls.dart';
 import 'nav_items.dart';
 import 'shell_providers.dart';
 
@@ -355,9 +354,6 @@ class _TopBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final store = ref.watch(selectedStoreProvider);
-    final date = ref.watch(selectedDateProvider);
-
     return Material(
       color: AppColors.surface.withValues(alpha: 0.92),
       elevation: 0,
@@ -378,10 +374,8 @@ class _TopBar extends ConsumerWidget {
                       icon: const Icon(Icons.menu_rounded),
                       onPressed: onMenu,
                     ),
-                  if (store != null) _StorePicker(user: user, current: store),
-                  const SizedBox(width: 8),
-                  _DatePill(date: date),
-                  const Spacer(),
+                  const Expanded(child: TopFilterControls()),
+                  const SizedBox(width: 12),
                   _UserMenu(user: user, showName: wide),
                 ],
               ),
@@ -389,90 +383,6 @@ class _TopBar extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _Pill extends StatelessWidget {
-  const _Pill({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: AppColors.textSecondary),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              label,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.1,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StorePicker extends ConsumerWidget {
-  const _StorePicker({required this.user, required this.current});
-
-  final UserDto user;
-  final StoreDto current;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final pill = _Pill(icon: Icons.storefront_outlined, label: current.name);
-    if (user.stores.length < 2) return Flexible(child: pill);
-
-    return Flexible(
-      child: PopupMenuButton<int>(
-        tooltip: 'Trocar de loja',
-        onSelected: (id) => ref.read(selectedStoreIdProvider.notifier).select(id),
-        itemBuilder: (_) => [
-          for (final s in user.stores) PopupMenuItem(value: s.id, child: Text(s.name)),
-        ],
-        child: pill,
-      ),
-    );
-  }
-}
-
-class _DatePill extends ConsumerWidget {
-  const _DatePill({required this.date});
-
-  final DateTime date;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-      onTap: () async {
-        final picked = await showDatePicker(
-          context: context,
-          initialDate: date,
-          firstDate: DateTime(2020),
-          lastDate: DateTime.now().add(const Duration(days: 1)),
-        );
-        if (picked != null) ref.read(selectedDateProvider.notifier).select(picked);
-      },
-      child: _Pill(icon: Icons.calendar_today_outlined, label: formatDate(date)),
     );
   }
 }

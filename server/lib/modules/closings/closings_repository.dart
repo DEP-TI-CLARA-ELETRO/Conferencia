@@ -8,11 +8,13 @@ class ClosingsRepository {
   final Pool<void> _db;
 
   Future<List<ClosingDto>> list({
-    required DateTime date,
+    required DateTime from,
+    required DateTime to,
     int? storeId,
+    String? businessUnit,
   }) async {
-    final day =
-        '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final fromDay = _ymd(from);
+    final toDay = _ymd(to);
 
     final rows = await _db.execute(
       Sql.named('''
@@ -36,11 +38,21 @@ class ClosingsRepository {
           c.payment_breakdown
         FROM cash_closings c
         JOIN stores s ON s.id = c.store_id
-        WHERE c.movement_date = @day::date
+        WHERE c.movement_date >= @fromDay::date
+          AND c.movement_date <= @toDay::date
           AND (@store::int IS NULL OR c.store_id = @store::int)
-        ORDER BY s.name, c.external_caixa_codigo, c.shift_code NULLS LAST
+          AND (
+            @bu::text IS NULL
+            OR s.business_unit = @bu::text
+          )
+        ORDER BY c.movement_date DESC, s.name, c.external_caixa_codigo, c.shift_code NULLS LAST
       '''),
-      parameters: {'day': day, 'store': storeId},
+      parameters: {
+        'fromDay': fromDay,
+        'toDay': toDay,
+        'store': storeId,
+        'bu': businessUnit,
+      },
     );
 
     return rows.map((r) {
@@ -73,6 +85,9 @@ class ClosingsRepository {
       );
     }).toList();
   }
+
+  static String _ymd(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   static double? _asDouble(Object? value) {
     if (value == null) return null;

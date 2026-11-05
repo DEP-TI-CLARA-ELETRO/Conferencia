@@ -25,20 +25,35 @@ class ClosingsRoutes {
 
   Future<Response> _list(Request request) async {
     final qp = request.url.queryParameters;
-    final dateStr = qp['date'];
-    if (dateStr == null || dateStr.isEmpty) {
-      return jsonError(400, 'Informe date=yyyy-MM-dd', code: 'invalid_request');
+
+    // Aceita date (legado = 1 dia) ou dateFrom + dateTo (intervalo).
+    final fromStr = qp['dateFrom'] ?? qp['date'];
+    final toStr = qp['dateTo'] ?? qp['dateFrom'] ?? qp['date'];
+    if (fromStr == null || fromStr.isEmpty) {
+      return jsonError(
+        400,
+        'Informe date=yyyy-MM-dd ou dateFrom/dateTo',
+        code: 'invalid_request',
+      );
     }
-    DateTime date;
+
+    late DateTime from;
+    late DateTime to;
     try {
-      date = DateTime.parse(dateStr);
+      from = DateTime.parse(fromStr);
+      to = DateTime.parse(toStr!);
     } catch (_) {
       return jsonError(400, 'Data invalida', code: 'invalid_request');
     }
+    if (to.isBefore(from)) {
+      return jsonError(400, 'dateTo deve ser >= dateFrom', code: 'invalid_request');
+    }
 
     final storeId = int.tryParse(qp['storeId'] ?? '');
+    final buRaw = qp['businessUnit']?.trim();
+    final businessUnit = (buRaw == null || buRaw.isEmpty) ? null : buRaw;
+
     final user = request.user;
-    // Se o usuário só tem lojas específicas, não deixa pedir outra
     if (storeId != null && user.stores.isNotEmpty) {
       final allowed = user.stores.any((s) => s.id == storeId);
       if (!allowed && !user.can(Permission.usersManage)) {
@@ -46,10 +61,13 @@ class ClosingsRoutes {
       }
     }
 
-    final list = await _repo.list(date: date, storeId: storeId);
+    final list = await _repo.list(
+      from: from,
+      to: to,
+      storeId: storeId,
+      businessUnit: businessUnit,
+    );
 
-    // Admin vê tudo (inclui postos sincronizados depois do login).
-    // Demais perfis: só lojas que já vieram no UserDto.
     final isAdmin = user.roles.contains(Role.admin) || user.can(Permission.usersManage);
     final storeIds = user.stores.map((s) => s.id).toSet();
     final filtered = isAdmin

@@ -21,6 +21,20 @@ String formatDate(DateTime d) => _date.format(d);
 /// Data por extenso com a primeira letra maiúscula.
 String formatLongDate(DateTime d) {
   final s = _longDate.format(d);
-  // s[0] = primeira letra; substring(1) = resto da string
   return s[0].toUpperCase() + s.substring(1);
+}
+
+/// Um dia ou intervalo: 04/11/2026 · 01/11/2026 – 04/11/2026
+String formatDateRange(DateTime from, DateTime to) {
+  if (from.year == to.year && from.month == to.month && from.day == to.day) {
+    return formatDate(from);
+  }
+  return '${formatDate(from)} – ${formatDate(to)}';
+}
+
+String formatLongDateRange(DateTime from, DateTime to) {
+  if (from.year == to.year && from.month == to.month && from.day == to.day) {
+    return formatLongDate(from);
+  }
+  return '${formatDate(from)} a ${formatDate(to)}';
 }

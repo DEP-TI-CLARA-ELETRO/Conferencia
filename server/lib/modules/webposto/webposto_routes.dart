@@ -46,22 +46,33 @@ class WebpostoRoutes {
     final body = await readJson(request) ?? {};
     final dateStr = body['date'] as String? ??
         request.url.queryParameters['date'];
-    DateTime day;
+    final fromStr = body['dateFrom'] as String? ?? dateStr;
+    final toStr = body['dateTo'] as String? ?? fromStr;
+    late DateTime from;
+    late DateTime to;
     try {
-      day = dateStr != null && dateStr.isNotEmpty
-          ? DateTime.parse(dateStr)
-          : DateTime.now();
+      final now = DateTime.now();
+      final parsedFrom = fromStr != null && fromStr.isNotEmpty
+          ? DateTime.parse(fromStr)
+          : now;
+      final parsedTo = toStr != null && toStr.isNotEmpty
+          ? DateTime.parse(toStr)
+          : parsedFrom;
+      from = DateTime(parsedFrom.year, parsedFrom.month, parsedFrom.day);
+      to = DateTime(parsedTo.year, parsedTo.month, parsedTo.day);
     } catch (_) {
       return jsonError(400, 'Data invalida', code: 'invalid_request');
     }
-    final dayOnly = DateTime(day.year, day.month, day.day);
+    if (to.isBefore(from)) {
+      return jsonError(400, 'dateTo deve ser >= dateFrom', code: 'invalid_request');
+    }
     final empresaCodigo = body['empresaCodigo'] as int? ??
         int.tryParse('${body['empresaCodigo'] ?? ''}');
 
     try {
       final result = await _sync.sync(
-        from: dayOnly,
-        to: dayOnly,
+        from: from,
+        to: to,
         empresaCodigo: empresaCodigo,
       );
       return jsonOk(result.toJson());

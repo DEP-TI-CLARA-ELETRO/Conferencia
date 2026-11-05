@@ -119,12 +119,12 @@ class AuthRepository {
     // Lojas: store_id NULL = todas; senão só as listadas
     final stores = await _db.execute(
       Sql.named('''
-        SELECT DISTINCT s.id, s.code, s.name FROM stores s
+        SELECT DISTINCT s.id, s.code, s.name, s.business_unit FROM stores s
         WHERE s.active AND (
           EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id = @id::uuid AND ur.store_id IS NULL)
           OR s.id IN (SELECT store_id FROM user_roles WHERE user_id = @id::uuid AND store_id IS NOT NULL)
         )
-        ORDER BY s.code
+        ORDER BY s.business_unit NULLS LAST, s.name, s.code
       '''),
       parameters: {'id': userId},
     );
@@ -140,7 +140,14 @@ class AuthRepository {
           .whereType<Permission>()
           .toSet(),
       stores: stores
-          .map((r) => StoreDto(id: r[0] as int, code: r[1] as String, name: r[2] as String))
+          .map(
+            (r) => StoreDto(
+              id: r[0] as int,
+              code: r[1] as String,
+              name: r[2] as String,
+              businessUnit: BusinessUnit.fromCode(r[3] as String?),
+            ),
+          )
           .toList(),
     );
   }

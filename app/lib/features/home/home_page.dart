@@ -23,10 +23,12 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authControllerProvider).user;
-    final date = ref.watch(selectedDateProvider);
+    final range = ref.watch(selectedDateRangeProvider);
     final store = ref.watch(selectedStoreProvider);
+    final unit = ref.watch(selectedBusinessUnitProvider);
     final firstName = (user?.name ?? '').split(' ').first;
     final narrow = MediaQuery.sizeOf(context).width < 600;
+    final scope = store?.name ?? unit?.shortLabel ?? 'Todas as lojas';
 
     final kpis = [
       const KpiTile(
@@ -73,7 +75,7 @@ class HomePage extends ConsumerWidget {
       children: [
         PageHeader(
           title: '${_greeting()}, $firstName',
-          subtitle: '${store?.name ?? ''} · ${formatLongDate(date)}',
+          subtitle: '$scope · ${formatLongDateRange(range.from, range.to)}',
         ),
         const SizedBox(height: 24),
         LayoutBuilder(

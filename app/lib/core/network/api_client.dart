@@ -29,6 +29,13 @@ class ApiException implements Exception {
           error.type == DioExceptionType.connectionTimeout) {
         return ApiException('Nao foi possivel conectar ao servidor.', code: 'network');
       }
+      if (error.type == DioExceptionType.receiveTimeout ||
+          error.type == DioExceptionType.sendTimeout) {
+        return ApiException(
+          'A operacao demorou demais. Tente um periodo menor ou tente de novo.',
+          code: 'timeout',
+        );
+      }
       return ApiException('Erro na comunicacao com o servidor.', status: error.response?.statusCode);
     }
     return ApiException('Erro inesperado.');

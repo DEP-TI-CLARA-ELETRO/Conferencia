@@ -12,7 +12,14 @@ void main() {
         name: 'Maria Silva',
         roles: [Role.fiscal],
         permissions: {Permission.homeView, Permission.closingsView},
-        stores: [StoreDto(id: 1, code: '01', name: 'Loja 01')],
+        stores: [
+          StoreDto(
+            id: 1,
+            code: '01',
+            name: 'Loja 01',
+            businessUnit: BusinessUnit.materiais,
+          ),
+        ],
       ),
     );
     final back = SessionDto.fromJson(s.toJson());

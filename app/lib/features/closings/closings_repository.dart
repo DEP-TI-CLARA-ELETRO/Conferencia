@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:shared/shared.dart';
 
 import '../../core/network/api_client.dart';
@@ -6,15 +7,23 @@ class ClosingsRepository {
   ClosingsRepository(this._api);
   final ApiClient _api;
 
-  Future<List<ClosingDto>> list({required DateTime date, int? storeId}) async {
-    final day =
-        '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  static String _ymd(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  Future<List<ClosingDto>> list({
+    required DateTime from,
+    required DateTime to,
+    int? storeId,
+    BusinessUnit? businessUnit,
+  }) async {
     try {
       final res = await _api.dio.get(
         '/closings',
         queryParameters: {
-          'date': day,
-          'storeId': ?storeId,
+          'dateFrom': _ymd(from),
+          'dateTo': _ymd(to),
+          if (storeId != null) 'storeId': storeId,
+          if (businessUnit != null) 'businessUnit': businessUnit.code,
         },
       );
       final items = (res.data as Map)['items'] as List? ?? [];
@@ -35,11 +44,23 @@ class ClosingsRepository {
     }
   }
 
-  Future<WebpostoSyncResultDto> syncWebposto({required DateTime date}) async {
-    final day =
-        '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  Future<WebpostoSyncResultDto> syncWebposto({
+    required DateTime from,
+    required DateTime to,
+  }) async {
     try {
-      final res = await _api.dio.post('/webposto/sync', data: {'date': day});
+      // Sync pode varrer vários dias na API WebPosto — timeout maior.
+      final res = await _api.dio.post(
+        '/webposto/sync',
+        data: {
+          'dateFrom': _ymd(from),
+          'dateTo': _ymd(to),
+        },
+        options: Options(
+          sendTimeout: const Duration(minutes: 2),
+          receiveTimeout: const Duration(minutes: 3),
+        ),
+      );
       return WebpostoSyncResultDto.fromJson(res.data as Map<String, dynamic>);
     } catch (e) {
       throw ApiException.from(e);

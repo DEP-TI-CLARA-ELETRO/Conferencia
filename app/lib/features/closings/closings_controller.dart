@@ -34,8 +34,9 @@ final closingsControllerProvider =
 class ClosingsController extends Notifier<ClosingsUiState> {
   @override
   ClosingsUiState build() {
-    ref.listen(selectedDateProvider, (_, _) => load());
+    ref.listen(selectedDateRangeProvider, (_, _) => load());
     ref.listen(selectedStoreIdProvider, (_, _) => load());
+    ref.listen(selectedBusinessUnitProvider, (_, _) => load());
     Future.microtask(load);
     return const ClosingsUiState(loading: true);
   }
@@ -52,10 +53,16 @@ class ClosingsController extends Notifier<ClosingsUiState> {
       webpostoReady: state.webpostoReady,
     );
     try {
-      final date = ref.read(selectedDateProvider);
-      // Lista todos os caixas do dia (postos syncados); filtro por loja pode voltar depois.
+      final range = ref.read(selectedDateRangeProvider);
+      final storeId = ref.read(selectedStoreIdProvider);
+      final unit = ref.read(selectedBusinessUnitProvider);
       final configured = await _repo.webpostoConfigured();
-      final items = await _repo.list(date: date);
+      final items = await _repo.list(
+        from: range.from,
+        to: range.to,
+        storeId: storeId,
+        businessUnit: unit,
+      );
       state = ClosingsUiState(
         items: items,
         webpostoReady: configured,
@@ -72,14 +79,15 @@ class ClosingsController extends Notifier<ClosingsUiState> {
       webpostoReady: state.webpostoReady,
     );
     try {
-      final date = ref.read(selectedDateProvider);
-      final result = await _repo.syncWebposto(date: date);
+      final range = ref.read(selectedDateRangeProvider);
+      final result = await _repo.syncWebposto(from: range.from, to: range.to);
+      await ref.read(authControllerProvider.notifier).refreshUser();
       await load();
       state = ClosingsUiState(
         items: state.items,
         webpostoReady: true,
         syncMessage:
-            'Sincronizado: ${result.companiesUpserted} postos, ${result.closingsUpserted} caixas (${result.from}).',
+            'Sincronizado: ${result.companiesUpserted} postos, ${result.closingsUpserted} caixas (${result.from} → ${result.to}).',
       );
     } on ApiException catch (e) {
       state = ClosingsUiState(

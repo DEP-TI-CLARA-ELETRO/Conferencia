@@ -17,7 +17,7 @@ class ClosingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final date = ref.watch(selectedDateProvider);
+    final range = ref.watch(selectedDateRangeProvider);
     final ui = ref.watch(closingsControllerProvider);
     final narrow = MediaQuery.sizeOf(context).width < 600;
 
@@ -26,7 +26,7 @@ class ClosingsPage extends ConsumerWidget {
       children: [
         PageHeader(
           title: 'Caixas do dia',
-          subtitle: formatLongDate(date),
+          subtitle: formatLongDateRange(range.from, range.to),
           trailing: Wrap(
             spacing: 10,
             runSpacing: 10,

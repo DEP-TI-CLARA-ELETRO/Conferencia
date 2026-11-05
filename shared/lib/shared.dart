@@ -6,6 +6,7 @@ library;
 
 // export = "repassa" os arquivos internos para quem importa o pacote.
 // Assim app e server não precisam conhecer a pasta src/ por dentro.
+export 'src/enums/business_unit.dart';
 export 'src/enums/closing_stage.dart';
 export 'src/enums/permission.dart';
 export 'src/enums/role.dart';

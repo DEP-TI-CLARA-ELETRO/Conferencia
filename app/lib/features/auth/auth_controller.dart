@@ -99,4 +99,17 @@ class AuthController extends Notifier<AuthState> {
     await _repo.logout();
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
+
+  /// Atualiza o usuário logado (ex.: lojas novas após sync) sem deslogar se falhar.
+  Future<void> refreshUser() async {
+    if (state.status != AuthStatus.authenticated) return;
+    try {
+      final user = await _repo.restore();
+      if (user != null) {
+        state = AuthState(status: AuthStatus.authenticated, user: user);
+      }
+    } catch (_) {
+      // Mantém sessão atual.
+    }
+  }
 }

@@ -199,7 +199,7 @@ class WebpostoSyncService {
     );
 
     if (found.isNotEmpty) {
-      params['id'] = found.first[0] as String;
+      // Só variáveis usadas no UPDATE (postgres rejeita params sobrando).
       await _db.execute(
         Sql.named('''
           UPDATE cash_closings SET
@@ -221,7 +221,23 @@ class WebpostoSyncService {
             updated_at = now()
           WHERE id = @id::uuid
         '''),
-        parameters: params,
+        parameters: {
+          'id': found.first[0] as String,
+          'extCodigo': params['extCodigo'],
+          'shiftLabel': params['shiftLabel'],
+          'pdv': params['pdv'],
+          'emp': params['emp'],
+          'opened': params['opened'],
+          'closedAt': params['closedAt'],
+          'closed': params['closed'],
+          'cons': params['cons'],
+          'blocked': params['blocked'],
+          'apurado': params['apurado'],
+          'diff': params['diff'],
+          'pay': params['pay'],
+          'rawCaixa': params['rawCaixa'],
+          'rawAp': params['rawAp'],
+        },
       );
       return;
     }
