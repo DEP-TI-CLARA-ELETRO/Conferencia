@@ -11,12 +11,71 @@ import '../../core/widgets/status_chip.dart';
 import '../shell/shell_providers.dart';
 import 'closings_controller.dart';
 
+enum _SortColumn { apurado, diferenca, situacao }
+
+enum _SortDir { desc, asc }
+
 /// Página "Caixas do dia".
-class ClosingsPage extends ConsumerWidget {
+class ClosingsPage extends ConsumerStatefulWidget {
   const ClosingsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ClosingsPage> createState() => _ClosingsPageState();
+}
+
+class _ClosingsPageState extends ConsumerState<ClosingsPage> {
+  _SortColumn? _sortColumn;
+  _SortDir? _sortDir;
+
+  void _cycleSort(_SortColumn column) {
+    setState(() {
+      if (_sortColumn != column) {
+        _sortColumn = column;
+        _sortDir = _SortDir.desc;
+        return;
+      }
+      if (_sortDir == _SortDir.desc) {
+        _sortDir = _SortDir.asc;
+        return;
+      }
+      _sortColumn = null;
+      _sortDir = null;
+    });
+  }
+
+  List<ClosingDto> _sorted(List<ClosingDto> items) {
+    final column = _sortColumn;
+    final dir = _sortDir;
+    if (column == null || dir == null) return items;
+    final copy = [...items];
+    copy.sort((a, b) {
+      final cmp = switch (column) {
+        _SortColumn.apurado => _compareNullable(a.apurado, b.apurado),
+        _SortColumn.diferenca => _compareNullable(a.diferenca, b.diferenca),
+        _SortColumn.situacao => _statusRank(a).compareTo(_statusRank(b)),
+      };
+      return dir == _SortDir.desc ? -cmp : cmp;
+    });
+    return copy;
+  }
+
+  /// Nulos ficam no fim, mesmo quando a ordem inverte.
+  int _compareNullable(double? a, double? b) {
+    if (a == null && b == null) return 0;
+    if (a == null) return _sortDir == _SortDir.desc ? -1 : 1;
+    if (b == null) return _sortDir == _SortDir.desc ? 1 : -1;
+    return a.compareTo(b);
+  }
+
+  int _statusRank(ClosingDto c) => switch (_kindOf(c)) {
+        _BoxKind.divergent => 3,
+        _BoxKind.open => 2,
+        _BoxKind.closed => 1,
+        _BoxKind.consolidated => 0,
+      };
+
+  @override
+  Widget build(BuildContext context) {
     final range = ref.watch(selectedDateRangeProvider);
     final ui = ref.watch(closingsControllerProvider);
     final narrow = MediaQuery.sizeOf(context).width < 600;
@@ -110,26 +169,20 @@ class ClosingsPage extends ConsumerWidget {
             ),
           )
         else ...[
-          if (!narrow)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text(
-                '${ui.items.length} caixa${ui.items.length == 1 ? '' : 's'}',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+          _StatusSummary(items: ui.items),
+          const SizedBox(height: 12),
           AppCard(
             padding: EdgeInsets.zero,
             child: Column(
               children: [
-                const _HeaderRow(),
-                for (var i = 0; i < ui.items.length; i++) ...[
+                _HeaderRow(
+                  column: _sortColumn,
+                  dir: _sortDir,
+                  onSort: _cycleSort,
+                ),
+                for (final (i, item) in _sorted(ui.items).indexed) ...[
                   if (i > 0) const Divider(height: 1, color: AppColors.divider),
-                  _ClosingRow(ui.items[i]),
+                  _ClosingRow(item),
                 ],
               ],
             ),
@@ -198,31 +251,167 @@ const _headStyle = TextStyle(
 );
 
 class _HeaderRow extends StatelessWidget {
-  const _HeaderRow();
+  const _HeaderRow({required this.column, required this.dir, required this.onSort});
+
+  final _SortColumn? column;
+  final _SortDir? dir;
+  final ValueChanged<_SortColumn> onSort;
 
   @override
   Widget build(BuildContext context) {
     if (MediaQuery.sizeOf(context).width < 760) return const SizedBox.shrink();
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
       decoration: const BoxDecoration(
         color: AppColors.surfaceMuted,
         border: Border(bottom: BorderSide(color: AppColors.divider)),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Expanded(flex: 3, child: Text('CAIXA / LOJA', style: _headStyle)),
-          Expanded(flex: 2, child: Text('TURNO', style: _headStyle)),
-          Expanded(flex: 2, child: Text('APURADO', style: _headStyle, textAlign: TextAlign.right)),
-          Expanded(flex: 2, child: Text('DIFERENÇA', style: _headStyle, textAlign: TextAlign.right)),
+          const Expanded(flex: 3, child: Text('CAIXA / LOJA', style: _headStyle)),
+          const Expanded(flex: 2, child: Text('TURNO', style: _headStyle)),
           Expanded(
             flex: 2,
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Text('SITUAÇÃO', style: _headStyle),
+            child: _SortLabel(
+              label: 'APURADO',
+              alignEnd: true,
+              active: column == _SortColumn.apurado,
+              dir: column == _SortColumn.apurado ? dir : null,
+              onTap: () => onSort(_SortColumn.apurado),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: _SortLabel(
+              label: 'DIFERENÇA',
+              alignEnd: true,
+              active: column == _SortColumn.diferenca,
+              dir: column == _SortColumn.diferenca ? dir : null,
+              onTap: () => onSort(_SortColumn.diferenca),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: _SortLabel(
+              label: 'SITUAÇÃO',
+              alignEnd: true,
+              active: column == _SortColumn.situacao,
+              dir: column == _SortColumn.situacao ? dir : null,
+              onTap: () => onSort(_SortColumn.situacao),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SortLabel extends StatelessWidget {
+  const _SortLabel({
+    required this.label,
+    required this.active,
+    required this.dir,
+    required this.onTap,
+    this.alignEnd = false,
+  });
+
+  final String label;
+  final bool active;
+  final _SortDir? dir;
+  final VoidCallback onTap;
+  final bool alignEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = active ? AppColors.primary : AppColors.textTertiary;
+    final icon = switch (dir) {
+      _SortDir.desc => Icons.arrow_downward_rounded,
+      _SortDir.asc => Icons.arrow_upward_rounded,
+      null => Icons.unfold_more_rounded,
+    };
+    return Align(
+      alignment: alignEnd ? Alignment.centerRight : Alignment.centerLeft,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(label, style: _headStyle.copyWith(color: color)),
+              const SizedBox(width: 2),
+              Icon(icon, size: 14, color: color),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _BoxKind { open, divergent, consolidated, closed }
+
+_BoxKind _kindOf(ClosingDto c) {
+  if (!c.closed) return _BoxKind.open;
+  final d = c.diferenca ?? 0;
+  if (d.abs() >= 0.01) return _BoxKind.divergent;
+  if (c.consolidated) return _BoxKind.consolidated;
+  return _BoxKind.closed;
+}
+
+class _StatusSummary extends StatelessWidget {
+  const _StatusSummary({required this.items});
+  final List<ClosingDto> items;
+
+  @override
+  Widget build(BuildContext context) {
+    var open = 0, divergent = 0, consolidated = 0, closed = 0;
+    for (final c in items) {
+      switch (_kindOf(c)) {
+        case _BoxKind.open:
+          open++;
+        case _BoxKind.divergent:
+          divergent++;
+        case _BoxKind.consolidated:
+          consolidated++;
+        case _BoxKind.closed:
+          closed++;
+      }
+    }
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        _CountPill('${items.length} caixas', AppColors.textSecondary, AppColors.neutralSoft),
+        if (divergent > 0) _CountPill('$divergent divergência', AppColors.danger, AppColors.dangerSoft),
+        if (consolidated > 0)
+          _CountPill('$consolidated consolidado', AppColors.primary, AppColors.primarySoft),
+        if (closed > 0) _CountPill('$closed fechado', AppColors.success, AppColors.successSoft),
+        if (open > 0) _CountPill('$open aberto', AppColors.warning, AppColors.warningSoft),
+      ],
+    );
+  }
+}
+
+class _CountPill extends StatelessWidget {
+  const _CountPill(this.label, this.fg, this.bg);
+  final String label;
+  final Color fg;
+  final Color bg;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: fg.withValues(alpha: 0.18)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(color: fg, fontSize: 12, fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -232,20 +421,28 @@ class _ClosingRow extends StatelessWidget {
   const _ClosingRow(this.c);
   final ClosingDto c;
 
-  StatusTone get _tone {
-    if (!c.closed) return StatusTone.neutral;
-    final d = c.diferenca ?? 0;
-    if (d.abs() < 0.009) return StatusTone.success;
-    return StatusTone.danger;
-  }
+  _BoxKind get _kind => _kindOf(c);
 
-  String get _statusLabel {
-    if (!c.closed) return 'Aberto';
-    if (c.consolidated) return 'Consolidado';
-    final d = c.diferenca ?? 0;
-    if (d.abs() < 0.009) return 'Fechado';
-    return 'Divergência';
-  }
+  StatusTone get _tone => switch (_kind) {
+        _BoxKind.open => StatusTone.warning,
+        _BoxKind.divergent => StatusTone.danger,
+        _BoxKind.consolidated => StatusTone.info,
+        _BoxKind.closed => StatusTone.success,
+      };
+
+  String get _statusLabel => switch (_kind) {
+        _BoxKind.open => 'Aberto',
+        _BoxKind.divergent => 'Divergência',
+        _BoxKind.consolidated => 'Consolidado',
+        _BoxKind.closed => 'Fechado',
+      };
+
+  (Color fg, Color bg) get _paint => switch (_kind) {
+        _BoxKind.open => (AppColors.warning, AppColors.warningSoft),
+        _BoxKind.divergent => (AppColors.danger, AppColors.dangerSoft),
+        _BoxKind.consolidated => (AppColors.primary, AppColors.primarySoft),
+        _BoxKind.closed => (AppColors.success, AppColors.successSoft),
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -256,10 +453,10 @@ class _ClosingRow extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppColors.primaryMuted,
+            color: _paint.$2,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Icon(Icons.point_of_sale_rounded, size: 18, color: AppColors.primary),
+          child: Icon(Icons.point_of_sale_rounded, size: 18, color: _paint.$1),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -272,7 +469,7 @@ class _ClosingRow extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                c.storeName,
+                '${c.storeName} · ${c.movementDate.split('-').reversed.join('/')}',
                 style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 12,
@@ -291,9 +488,16 @@ class _ClosingRow extends StatelessWidget {
         ? AppColors.textSecondary
         : (diff < 0 ? AppColors.danger : AppColors.success);
 
+    final (accent, wash) = _paint;
+
     if (wide) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: wash.withValues(alpha: _kind == _BoxKind.divergent ? 0.72 : 0.45),
+          border: Border(left: BorderSide(color: accent, width: 4)),
+        ),
+        child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 14, 22, 14),
         child: Row(
           children: [
             Expanded(flex: 3, child: title),
@@ -323,10 +527,16 @@ class _ClosingRow extends StatelessWidget {
             Expanded(flex: 2, child: Align(alignment: Alignment.centerRight, child: chip)),
           ],
         ),
+        ),
       );
     }
 
-    return Padding(
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: wash.withValues(alpha: 0.55),
+        border: Border(left: BorderSide(color: accent, width: 4)),
+      ),
+      child: Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,6 +578,7 @@ class _ClosingRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
