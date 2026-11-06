@@ -22,6 +22,7 @@ class KpiTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     return AppCard(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
       child: Column(
@@ -33,7 +34,7 @@ class KpiTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -68,7 +69,7 @@ class KpiTile extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               caption!,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.textTertiary,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,

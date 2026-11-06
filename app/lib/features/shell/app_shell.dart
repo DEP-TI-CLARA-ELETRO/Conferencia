@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared/shared.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/theme_mode.dart';
 import '../auth/auth_controller.dart';
 import 'filter_controls.dart';
 import 'group_backdrop.dart';
@@ -20,6 +21,7 @@ class AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    AppColors.watch(context);
     final user = ref.watch(authControllerProvider).user;
     if (user == null) return const SizedBox.shrink();
 
@@ -36,10 +38,7 @@ class AppShell extends ConsumerWidget {
     );
 
     final collapsed = ref.watch(sidebarCollapsedProvider);
-    final store = ref.watch(selectedStoreProvider);
-    final unit = ref.watch(selectedBusinessUnitProvider);
-    final brand = store?.businessUnit ?? unit;
-    final body = GroupBackdrop(unit: brand, child: content);
+    final body = GroupBackdrop(child: content);
 
     if (wide) {
       return Scaffold(
@@ -112,95 +111,102 @@ class _Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
       width: collapsed ? _collapsedWidth : _expandedWidth,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [AppColors.sidebar, Color(0xFF102825)],
+          colors: [AppColors.sidebar, AppColors.sidebarEnd],
         ),
       ),
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(collapsed ? 12 : 20, 24, collapsed ? 12 : 20, 24),
-              child: collapsed
-                  ? const Center(child: _Logo())
-                  : const Row(
-                      children: [
-                        _Logo(),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Conferência',
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.3,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Durante a animação a largura ainda é estreita: não mostra o texto.
+          final compact = constraints.maxWidth < 160;
+          return SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(compact ? 12 : 20, 24, compact ? 12 : 20, 24),
+                  child: compact
+                      ? const Center(child: _Logo())
+                      : const Row(
+                          children: [
+                            _Logo(),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Conferência',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
+                ),
+                if (!compact)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                    child: Text(
+                      'MENU',
+                      style: TextStyle(
+                        color: AppColors.sidebarText.withValues(alpha: 0.55),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.1,
+                      ),
                     ),
-            ),
-            if (!collapsed)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                child: Text(
-                  'MENU',
-                  style: TextStyle(
-                    color: AppColors.sidebarText.withValues(alpha: 0.55),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.1,
+                  ),
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 12),
+                    children: [
+                      for (final item in items)
+                        _NavTile(
+                          item: item,
+                          selected: location == item.path || location.startsWith('${item.path}/'),
+                          collapsed: compact,
+                          onTap: () {
+                            if (closeOnTap) Navigator.of(context).pop();
+                            context.go(item.path);
+                          },
+                        ),
+                    ],
                   ),
                 ),
-              ),
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.symmetric(horizontal: collapsed ? 10 : 12),
-                children: [
-                  for (final item in items)
-                    _NavTile(
-                      item: item,
-                      selected: location == item.path || location.startsWith('${item.path}/'),
-                      collapsed: collapsed,
-                      onTap: () {
-                        if (closeOnTap) Navigator.of(context).pop();
-                        context.go(item.path);
-                      },
-                    ),
-                ],
-              ),
-            ),
-            if (onToggleCollapse != null)
-              Padding(
-                padding: EdgeInsets.fromLTRB(collapsed ? 10 : 12, 8, collapsed ? 10 : 12, 12),
-                child: _CollapseButton(collapsed: collapsed, onTap: onToggleCollapse!),
-              ),
-            if (!collapsed)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
-                child: Text(
-                  'Grupo Clara',
-                  style: TextStyle(
-                    color: AppColors.sidebarText.withValues(alpha: 0.45),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                if (onToggleCollapse != null)
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(compact ? 10 : 12, 8, compact ? 10 : 12, 12),
+                    child: _CollapseButton(collapsed: compact, onTap: onToggleCollapse!),
                   ),
-                ),
-              )
-            else
-              const SizedBox(height: 12),
-          ],
-        ),
+                if (!compact)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+                    child: Text(
+                      'Grupo Clara',
+                      style: TextStyle(
+                        color: AppColors.sidebarText.withValues(alpha: 0.45),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  )
+                else
+                  const SizedBox(height: 12),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -214,6 +220,7 @@ class _CollapseButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     if (collapsed) {
       return IconButton(
         tooltip: 'Expandir menu',
@@ -250,19 +257,13 @@ class _Logo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     return Container(
       width: 34,
       height: 34,
       decoration: BoxDecoration(
-        color: AppColors.primaryHover,
+        color: AppColors.primary,
         borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryHover.withValues(alpha: 0.35),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: const Icon(Icons.point_of_sale_rounded, color: Colors.white, size: 18),
     );
@@ -284,10 +285,11 @@ class _NavTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     final icon = Icon(
       selected ? item.selectedIcon : item.icon,
       size: 20,
-      color: selected ? AppColors.primarySoft : AppColors.sidebarText,
+      color: selected ? AppColors.primaryHover : AppColors.sidebarText,
     );
 
     final tile = Material(
@@ -300,14 +302,11 @@ class _NavTile extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: EdgeInsets.symmetric(
             horizontal: collapsed ? 0 : 12,
-            vertical: 12,
+            vertical: 11,
           ),
           alignment: collapsed ? Alignment.center : Alignment.centerLeft,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: selected
-                ? Border.all(color: AppColors.primaryHover.withValues(alpha: 0.35))
-                : null,
           ),
           child: collapsed
               ? icon
@@ -326,15 +325,6 @@ class _NavTile extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (selected)
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primaryHover,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
                   ],
                 ),
         ),
@@ -359,11 +349,12 @@ class _TopBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    AppColors.watch(context);
     return Material(
-      color: AppColors.surface.withValues(alpha: 0.92),
+      color: AppColors.surface,
       elevation: 0,
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(bottom: BorderSide(color: AppColors.border)),
         ),
         child: SafeArea(
@@ -380,7 +371,8 @@ class _TopBar extends ConsumerWidget {
                       onPressed: onMenu,
                     ),
                   const Expanded(child: TopFilterControls()),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 4),
+                  const ThemeModeButton(),
                   _UserMenu(user: user, showName: wide),
                 ],
               ),
@@ -400,6 +392,7 @@ class _UserMenu extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    AppColors.watch(context);
     return PopupMenuButton<String>(
       tooltip: 'Conta',
       offset: const Offset(0, 48),
@@ -412,8 +405,8 @@ class _UserMenu extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(user.name, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.text)),
-              Text(user.email, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              Text(user.name, style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.text)),
+              Text(user.email, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
             ],
           ),
         ),
@@ -445,7 +438,7 @@ class _UserMenu extends ConsumerWidget {
                   ),
                   Text(
                     user.roleLabel,
-                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -455,11 +448,7 @@ class _UserMenu extends ConsumerWidget {
             height: 38,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryHover],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: AppColors.primary,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(

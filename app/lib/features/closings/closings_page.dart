@@ -77,6 +77,7 @@ class _ClosingsPageState extends ConsumerState<ClosingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     final range = ref.watch(selectedDateRangeProvider);
     final ui = ref.watch(closingsControllerProvider);
     final narrow = MediaQuery.sizeOf(context).width < 600;
@@ -133,7 +134,7 @@ class _ClosingsPageState extends ConsumerState<ClosingsPage> {
         if (ui.loading)
           const Padding(
             padding: EdgeInsets.all(64),
-            child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+            child: Center(child: CircularProgressIndicator()),
           )
         else if (ui.items.isEmpty)
           AppCard(
@@ -148,7 +149,7 @@ class _ClosingsPageState extends ConsumerState<ClosingsPage> {
                       color: AppColors.primaryMuted,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.inbox_outlined,
                       color: AppColors.primary,
                       size: 26,
@@ -160,7 +161,7 @@ class _ClosingsPageState extends ConsumerState<ClosingsPage> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'Sincronize o WebPosto ou escolha outro dia na barra superior.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: AppColors.textSecondary, height: 1.4, fontSize: 13),
@@ -171,6 +172,11 @@ class _ClosingsPageState extends ConsumerState<ClosingsPage> {
           )
         else ...[
           _StatusSummary(items: ui.items),
+          const SizedBox(height: 8),
+          Text(
+            'Clique em um caixa para ver o responsável, as formas de pagamento e as vendas.',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500),
+          ),
           const SizedBox(height: 12),
           AppCard(
             padding: EdgeInsets.zero,
@@ -182,7 +188,7 @@ class _ClosingsPageState extends ConsumerState<ClosingsPage> {
                   onSort: _cycleSort,
                 ),
                 for (final (i, item) in _sorted(ui.items).indexed) ...[
-                  if (i > 0) const Divider(height: 1, color: AppColors.divider),
+                  if (i > 0) Divider(height: 1, color: AppColors.divider),
                   _ClosingRow(
                     item,
                     onTap: () => showDialog<void>(
@@ -210,6 +216,7 @@ class _HintBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     final bg = switch (tone) {
       StatusTone.success => AppColors.successSoft,
       StatusTone.danger => AppColors.dangerSoft,
@@ -253,12 +260,11 @@ class _HintBanner extends StatelessWidget {
   }
 }
 
-const _headStyle = TextStyle(
-  color: AppColors.textTertiary,
+TextStyle get _headStyle => const TextStyle(
   fontSize: 11,
   fontWeight: FontWeight.w700,
   letterSpacing: 0.6,
-);
+).copyWith(color: AppColors.textTertiary);
 
 class _HeaderRow extends StatelessWidget {
   const _HeaderRow({required this.column, required this.dir, required this.onSort});
@@ -269,17 +275,18 @@ class _HeaderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     if (MediaQuery.sizeOf(context).width < 760) return const SizedBox.shrink();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 8),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
         border: Border(bottom: BorderSide(color: AppColors.divider)),
       ),
       child: Row(
         children: [
-          const Expanded(flex: 3, child: Text('CAIXA / LOJA', style: _headStyle)),
-          const Expanded(flex: 2, child: Text('TURNO', style: _headStyle)),
+          Expanded(flex: 3, child: Text('CAIXA / LOJA', style: _headStyle)),
+          Expanded(flex: 2, child: Text('TURNO', style: _headStyle)),
           Expanded(
             flex: 2,
             child: _SortLabel(
@@ -333,6 +340,7 @@ class _SortLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     final color = active ? AppColors.primary : AppColors.textTertiary;
     final icon = switch (dir) {
       _SortDir.desc => Icons.arrow_downward_rounded,
@@ -376,6 +384,7 @@ class _StatusSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     var open = 0, divergent = 0, consolidated = 0, closed = 0;
     for (final c in items) {
       switch (_kindOf(c)) {
@@ -412,6 +421,7 @@ class _CountPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
@@ -457,6 +467,7 @@ class _ClosingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     final wide = MediaQuery.sizeOf(context).width >= 760;
     final title = Row(
       children: [
@@ -481,7 +492,7 @@ class _ClosingRow extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 '${c.storeName} · ${c.movementDate.split('-').reversed.join('/')}',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -500,18 +511,22 @@ class _ClosingRow extends StatelessWidget {
         : (diff < 0 ? AppColors.danger : AppColors.success);
 
     final (accent, wash) = _paint;
+    final row = Color.alphaBlend(
+      wash.withValues(alpha: AppColors.isDark ? 0.16 : 0.22),
+      AppColors.surface,
+    );
 
     if (wide) {
       return Material(
-        color: wash.withValues(alpha: _kind == _BoxKind.divergent ? 0.72 : 0.45),
+        color: row,
         child: InkWell(
           onTap: onTap,
           child: DecoratedBox(
         decoration: BoxDecoration(
-          border: Border(left: BorderSide(color: accent, width: 4)),
+          border: Border(left: BorderSide(color: accent, width: 3)),
         ),
         child: Padding(
-        padding: const EdgeInsets.fromLTRB(18, 14, 22, 14),
+        padding: const EdgeInsets.fromLTRB(18, 13, 22, 13),
         child: Row(
           children: [
             Expanded(flex: 3, child: title),
@@ -548,7 +563,7 @@ class _ClosingRow extends StatelessWidget {
     }
 
     return Material(
-      color: wash.withValues(alpha: 0.55),
+      color: row,
       child: InkWell(
         onTap: onTap,
         child: DecoratedBox(
@@ -574,7 +589,7 @@ class _ClosingRow extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Apurado', style: TextStyle(color: AppColors.textTertiary, fontSize: 11)),
+                          Text('Apurado', style: TextStyle(color: AppColors.textTertiary, fontSize: 11)),
                           const SizedBox(height: 2),
                           Text(
                             c.apurado == null ? '—' : formatMoney(c.apurado!),
@@ -585,7 +600,7 @@ class _ClosingRow extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          const Text('Diferença', style: TextStyle(color: AppColors.textTertiary, fontSize: 11)),
+                          Text('Diferença', style: TextStyle(color: AppColors.textTertiary, fontSize: 11)),
                           const SizedBox(height: 2),
                           Text(
                             diffText,

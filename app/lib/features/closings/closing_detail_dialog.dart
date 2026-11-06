@@ -46,13 +46,14 @@ class _ClosingDetailDialogState extends State<ClosingDetailDialog> {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     final c = widget.closing;
     final open = !c.closed;
     final size = MediaQuery.sizeOf(context);
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      backgroundColor: const Color(0xFFFBFBFD),
+      backgroundColor: AppColors.panel,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -122,6 +123,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     final date = closing.movementDate.split('-').reversed.join('/');
     final shift = _shiftLabel(closing.shiftLabel);
     return Padding(
@@ -135,7 +137,7 @@ class _Header extends StatelessWidget {
               children: [
                 Text(
                   'Caixa #${closing.caixaCodigo} — $shift',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.4,
@@ -145,7 +147,7 @@ class _Header extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '${closing.storeName} · $date',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -174,8 +176,9 @@ class _StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = open ? const Color(0xFFB45309) : AppColors.success;
-    final bg = open ? const Color(0xFFFEF3C7) : AppColors.successSoft;
+    AppColors.watch(context);
+    final fg = open ? AppColors.warning : AppColors.success;
+    final bg = open ? AppColors.warningSoft : AppColors.successSoft;
     return Container(
       margin: const EdgeInsets.only(top: 4),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -204,6 +207,7 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     final diff = closing.diferenca;
     final diffColor = diff == null || diff == 0
         ? AppColors.text
@@ -248,6 +252,7 @@ class _PaymentsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     final payments = detail?.payments ?? const <ClosingPaymentLineDto>[];
     return _PanelCard(
       title: 'FORMAS DE PAGAMENTO (VENDAS DO CAIXA)',
@@ -261,7 +266,7 @@ class _PaymentsCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   child: Text(
                     error ?? 'Sem vendas vinculadas a este caixa no período carregado.',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13,
                       height: 1.4,
@@ -288,6 +293,7 @@ class _SalesTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     final count = detail?.salesCount ?? 0;
     final shown = detail?.sales.length ?? 0;
     final title = count == 0
@@ -299,7 +305,7 @@ class _SalesTable extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.4,
@@ -315,7 +321,7 @@ class _SalesTable extends StatelessWidget {
         else if (shown == 0)
           Text(
             error ?? 'Nenhuma venda neste caixa.',
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
           )
         else
           _table(detail!.sales),
@@ -326,7 +332,7 @@ class _SalesTable extends StatelessWidget {
   Widget _table(List<ClosingSaleLineDto> sales) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
@@ -336,7 +342,7 @@ class _SalesTable extends StatelessWidget {
           children: [
             const _SaleHead(),
             for (final (i, sale) in sales.indexed) ...[
-              if (i > 0) const Divider(height: 1, color: AppColors.divider),
+              if (i > 0) Divider(height: 1, color: AppColors.divider),
               _SaleRow(sale),
             ],
           ],
@@ -351,14 +357,15 @@ class _SaleHead extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const style = TextStyle(
+    AppColors.watch(context);
+    final style = TextStyle(
       color: AppColors.textTertiary,
       fontSize: 11,
       fontWeight: FontWeight.w700,
       letterSpacing: 0.4,
     );
-    return const ColoredBox(
-      color: Color(0xFFF8FAFC),
+    return ColoredBox(
+      color: AppColors.surfaceMuted,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         child: Row(
@@ -381,7 +388,8 @@ class _SaleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const style = TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.text);
+    AppColors.watch(context);
+    final style = TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.text);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       child: Row(
@@ -409,6 +417,7 @@ class _OkPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     final fg = cancelled ? AppColors.danger : AppColors.success;
     final bg = cancelled ? AppColors.dangerSoft : AppColors.successSoft;
     return Container(
@@ -429,9 +438,10 @@ class _PanelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
@@ -442,7 +452,7 @@ class _PanelCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.5,
@@ -468,6 +478,7 @@ class _Line extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
@@ -476,7 +487,7 @@ class _Line extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.3),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.3),
             ),
           ),
           const SizedBox(width: 12),

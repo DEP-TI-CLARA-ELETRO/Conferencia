@@ -8,48 +8,58 @@ abstract final class AppTheme {
   static const radius = 16.0;
   static const radiusSm = 12.0;
 
-  static List<BoxShadow> get softShadow => [
-        BoxShadow(
-          color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-          blurRadius: 24,
-          offset: const Offset(0, 8),
-        ),
-        BoxShadow(
-          color: const Color(0xFF0F172A).withValues(alpha: 0.03),
-          blurRadius: 6,
-          offset: const Offset(0, 2),
-        ),
-      ];
+  static List<BoxShadow> get softShadow {
+    final dark = AppColors.isDark;
+    return [
+      BoxShadow(
+        color: AppColors.shadow.withValues(alpha: dark ? 0.45 : 0.04),
+        blurRadius: 24,
+        offset: const Offset(0, 8),
+      ),
+      BoxShadow(
+        color: AppColors.shadow.withValues(alpha: dark ? 0.28 : 0.03),
+        blurRadius: 6,
+        offset: const Offset(0, 2),
+      ),
+    ];
+  }
 
-  static ThemeData light() {
+  static ThemeData light() => _build(AppPalette.light, Brightness.light);
+
+  static ThemeData dark() => _build(AppPalette.dark, Brightness.dark);
+
+  static ThemeData _build(AppPalette c, Brightness brightness) {
     final scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.primary,
-      brightness: Brightness.light,
+      seedColor: c.primary,
+      brightness: brightness,
     ).copyWith(
-      primary: AppColors.primary,
+      primary: c.primary,
       onPrimary: Colors.white,
-      surface: AppColors.surface,
-      onSurface: AppColors.text,
-      error: AppColors.danger,
-      outline: AppColors.border,
+      surface: c.surface,
+      onSurface: c.text,
+      error: c.danger,
+      outline: c.border,
     );
 
     final base = ThemeData(
       useMaterial3: true,
+      brightness: brightness,
       colorScheme: scheme,
-      scaffoldBackgroundColor: AppColors.background,
-      dividerColor: AppColors.divider,
+      scaffoldBackgroundColor: c.background,
+      canvasColor: c.surface,
+      dividerColor: c.divider,
       splashFactory: InkRipple.splashFactory,
+      iconTheme: IconThemeData(color: c.textSecondary),
     );
 
     final text = GoogleFonts.plusJakartaSansTextTheme(base.textTheme).apply(
-      bodyColor: AppColors.text,
-      displayColor: AppColors.text,
+      bodyColor: c.text,
+      displayColor: c.text,
     );
 
-    OutlineInputBorder border(Color c, {double width = 1}) => OutlineInputBorder(
+    OutlineInputBorder border(Color color, {double width = 1}) => OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusSm),
-          borderSide: BorderSide(color: c, width: width),
+          borderSide: BorderSide(color: color, width: width),
         );
 
     return base.copyWith(
@@ -64,34 +74,36 @@ abstract final class AppTheme {
         ),
         titleLarge: text.titleLarge?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.3),
       ),
-      dividerTheme: const DividerThemeData(
-        color: AppColors.divider,
-        space: 1,
-        thickness: 1,
-      ),
+      dividerTheme: DividerThemeData(color: c.divider, space: 1, thickness: 1),
       cardTheme: CardThemeData(
-        color: AppColors.surface,
+        color: c.surface,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radius),
-          side: const BorderSide(color: AppColors.border),
+          side: BorderSide(color: c.border),
         ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: c.panel,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceMuted,
+        fillColor: c.surfaceMuted,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        border: border(AppColors.border),
-        enabledBorder: border(AppColors.border),
-        focusedBorder: border(AppColors.primary, width: 1.5),
-        errorBorder: border(AppColors.danger),
-        focusedErrorBorder: border(AppColors.danger, width: 1.5),
-        labelStyle: const TextStyle(color: AppColors.textSecondary),
+        border: border(c.border),
+        enabledBorder: border(c.border),
+        focusedBorder: border(c.primary, width: 1.5),
+        errorBorder: border(c.danger),
+        focusedErrorBorder: border(c.danger, width: 1.5),
+        labelStyle: TextStyle(color: c.textSecondary),
+        hintStyle: TextStyle(color: c.textTertiary),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: c.primary,
           foregroundColor: Colors.white,
           minimumSize: const Size(0, 48),
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -102,32 +114,36 @@ abstract final class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.text,
-          backgroundColor: AppColors.surface,
+          foregroundColor: c.text,
+          backgroundColor: c.surface,
           minimumSize: const Size(0, 44),
-          side: const BorderSide(color: AppColors.border),
+          side: BorderSide(color: c.border),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusSm)),
           textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+        style: TextButton.styleFrom(foregroundColor: c.primary),
       ),
       popupMenuTheme: PopupMenuThemeData(
-        color: Colors.white,
+        color: c.surface,
         elevation: 8,
-        shadowColor: const Color(0xFF0F172A).withValues(alpha: 0.12),
+        surfaceTintColor: Colors.transparent,
+        shadowColor: c.shadow.withValues(alpha: brightness == Brightness.dark ? 0.4 : 0.12),
+        textStyle: TextStyle(color: c.text, fontSize: 14),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: AppColors.border),
+          side: BorderSide(color: c.border),
         ),
       ),
-      drawerTheme: const DrawerThemeData(backgroundColor: AppColors.sidebar),
+      drawerTheme: DrawerThemeData(backgroundColor: c.sidebar),
       datePickerTheme: DatePickerThemeData(
-        backgroundColor: AppColors.surface,
-        headerBackgroundColor: AppColors.primaryMuted,
+        backgroundColor: c.surface,
+        headerBackgroundColor: c.primaryMuted,
+        headerForegroundColor: c.text,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: c.primary),
     );
   }
 }

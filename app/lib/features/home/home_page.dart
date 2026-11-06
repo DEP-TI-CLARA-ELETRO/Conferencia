@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared/shared.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/brand_scope.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/kpi_tile.dart';
@@ -23,6 +22,7 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    AppColors.watch(context);
     final user = ref.watch(authControllerProvider).user;
     final range = ref.watch(selectedDateRangeProvider);
     final store = ref.watch(selectedStoreProvider);
@@ -38,20 +38,20 @@ class HomePage extends ConsumerWidget {
         caption: '8 já fechados',
         icon: Icons.inbox_outlined,
       ),
-      const KpiTile(
+      KpiTile(
         label: 'Conferidos',
         value: '6',
         caption: '60% do total',
         valueColor: AppColors.success,
         icon: Icons.verified_outlined,
       ),
-      const KpiTile(
+      KpiTile(
         label: 'Em conferência',
         value: '2',
         valueColor: AppColors.warning,
         icon: Icons.hourglass_top_rounded,
       ),
-      const KpiTile(
+      KpiTile(
         label: 'Com divergência',
         value: '1',
         valueColor: AppColors.danger,
@@ -97,9 +97,7 @@ class HomePage extends ConsumerWidget {
         Text(
           'Dados de exemplo, apenas para validar o layout.',
           style: TextStyle(
-            color: BrandScope.unitOf(context) == BusinessUnit.posto
-                ? const Color(0xFFFFE4E6)
-                : AppColors.textTertiary,
+            color: AppColors.textTertiary,
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
@@ -114,6 +112,7 @@ class _StageProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     const done = {
       ClosingStage.pdvImported: 10,
       ClosingStage.fiscal: 8,
@@ -134,7 +133,7 @@ class _StageProgress extends StatelessWidget {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: -0.3),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Quantos caixas já passaram por cada etapa',
             style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500),
           ),
@@ -158,7 +157,7 @@ class _StageProgress extends StatelessWidget {
                         value: done[stage]! / total,
                         minHeight: 8,
                         backgroundColor: AppColors.neutralSoft,
-                        color: AppColors.primaryHover,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -167,7 +166,7 @@ class _StageProgress extends StatelessWidget {
                     child: Text(
                       '${done[stage]}/$total',
                       textAlign: TextAlign.right,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,

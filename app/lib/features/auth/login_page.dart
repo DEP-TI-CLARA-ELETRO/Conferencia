@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/theme_mode.dart';
 import '../../core/widgets/app_card.dart';
 import 'auth_controller.dart';
 
@@ -36,6 +37,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     final auth = ref.watch(authControllerProvider);
 
     return Scaffold(
@@ -45,9 +47,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF0B1C1A),
-              Color(0xFF12352F),
-              Color(0xFF0F766E),
+              Color(0xFF0B1F3A),
+              Color(0xFF163A66),
+              Color(0xFF1D4ED8),
             ],
             stops: [0.0, 0.55, 1.0],
           ),
@@ -166,7 +168,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                   ),
                                   child: Text(
                                     auth.error!,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: AppColors.danger,
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
@@ -196,6 +198,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                 ),
               ),
+            ),
+            const Positioned(
+              top: 8,
+              right: 8,
+              child: ThemeModeButton(foreground: Colors.white),
             ),
           ],
         ),

@@ -29,6 +29,7 @@ class TopFilterControls extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    AppColors.watch(context);
     final unit = ref.watch(selectedBusinessUnitProvider);
     final store = ref.watch(selectedStoreProvider);
     final range = ref.watch(selectedDateRangeProvider);
@@ -144,6 +145,7 @@ class _CheckedItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     return Row(
       children: [
         Icon(
@@ -179,6 +181,7 @@ class _MenuPill<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     return PopupMenuButton<T>(
       tooltip: '',
       onSelected: onSelected,
@@ -203,6 +206,7 @@ class _TapPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -220,11 +224,12 @@ class _PillShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: AppColors.surfaceMuted,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
@@ -244,7 +249,7 @@ class _PillShell extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
-          const Icon(Icons.expand_more_rounded, size: 16, color: AppColors.textTertiary),
+          Icon(Icons.expand_more_rounded, size: 16, color: AppColors.textTertiary),
         ],
       ),
     );
@@ -273,6 +278,7 @@ class _StorePickerDialogState extends State<_StorePickerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     final q = _query.text.trim().toLowerCase();
     final filtered = q.isEmpty
         ? widget.stores
@@ -341,7 +347,7 @@ class _StorePickerDialogState extends State<_StorePickerDialog> {
               const Divider(height: 1),
               Expanded(
                 child: filtered.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
                           'Nenhuma loja neste grupo',
                           style: TextStyle(color: AppColors.textSecondary),
@@ -363,7 +369,7 @@ class _StorePickerDialogState extends State<_StorePickerDialog> {
                                     const SizedBox(width: 6),
                                     Text(
                                       unit.label.toUpperCase(),
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
                                         letterSpacing: 0.8,
@@ -474,6 +480,7 @@ class _PeriodPickerDialogState extends State<_PeriodPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     final today = _today;
     final yesterday = today.subtract(const Duration(days: 1));
     final last7 = today.subtract(const Duration(days: 6));
@@ -505,7 +512,7 @@ class _PeriodPickerDialogState extends State<_PeriodPickerDialog> {
                 ],
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 'Escolha um atalho ou as datas De / Até',
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
               ),
@@ -546,8 +553,8 @@ class _PeriodPickerDialogState extends State<_PeriodPickerDialog> {
                       onTap: _pickFrom,
                     ),
                   ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Icon(Icons.arrow_forward_rounded, size: 18, color: AppColors.textTertiary),
                   ),
                   Expanded(
@@ -601,6 +608,7 @@ class _PresetChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     return Material(
       color: selected ? AppColors.primary : AppColors.surfaceMuted,
       borderRadius: BorderRadius.circular(999),
@@ -640,6 +648,7 @@ class _DateBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     return Material(
       color: AppColors.surfaceMuted,
       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -657,7 +666,7 @@ class _DateBox extends StatelessWidget {
             children: [
               Text(
                 caption,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textTertiary,

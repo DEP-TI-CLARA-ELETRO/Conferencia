@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shared/shared.dart';
 
 import '../theme/app_colors.dart';
-import '../theme/brand_scope.dart';
 
 /// Cabeçalho de página: título + subtítulo + ações.
 class PageHeader extends StatelessWidget {
@@ -14,17 +12,17 @@ class PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    AppColors.watch(context);
     return LayoutBuilder(
       builder: (context, c) {
         final stack = c.maxWidth < 640 && trailing != null;
-        final onBrand = BrandScope.unitOf(context) == BusinessUnit.posto;
         final titleBlock = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               title,
               style: TextStyle(
-                color: onBrand ? Colors.white : AppColors.text,
+                color: AppColors.text,
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -0.8,
@@ -36,7 +34,7 @@ class PageHeader extends StatelessWidget {
               Text(
                 subtitle!,
                 style: TextStyle(
-                  color: onBrand ? const Color(0xFFFFE4E6) : AppColors.textSecondary,
+                  color: AppColors.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   height: 1.35,
@@ -61,16 +59,6 @@ class PageHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(child: titleBlock),
-            if (onBrand && c.maxWidth > 760) ...[
-              const Padding(
-                padding: EdgeInsets.only(right: 28, bottom: 2),
-                child: Image(
-                  image: AssetImage('assets/brands/postos_gr.png'),
-                  height: 54,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ],
             ?trailing,
           ],
         );
