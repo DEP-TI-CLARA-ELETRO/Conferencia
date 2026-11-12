@@ -47,38 +47,42 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF0B1F3A),
-              Color(0xFF163A66),
-              Color(0xFF1D4ED8),
+              Color(0xFFF6F3EC),
+              Color(0xFFEEF5F0),
+              Color(0xFFF8EEE6),
             ],
-            stops: [0.0, 0.55, 1.0],
           ),
         ),
         child: Stack(
           children: [
             Positioned(
-              top: -80,
-              right: -60,
-              child: Container(
-                width: 280,
-                height: 280,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.06),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -100,
-              left: -40,
+              top: -100,
+              right: -40,
               child: Container(
                 width: 320,
                 height: 320,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primaryHover.withValues(alpha: 0.18),
+                  color: const Color(0xFFB8E6CF).withValues(alpha: 0.55),
                 ),
               ),
+            ),
+            Positioned(
+              bottom: -120,
+              left: -60,
+              child: Container(
+                width: 360,
+                height: 360,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFF0C9B0).withValues(alpha: 0.45),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: ThemeModeButton(foreground: AppColors.text),
             ),
             Center(
               child: SingleChildScrollView(
@@ -92,9 +96,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         width: 58,
                         height: 58,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: AppTheme.softShadow,
                         ),
                         child: const Icon(
                           Icons.point_of_sale_rounded,
@@ -103,11 +107,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      const Text(
+                      Text(
                         'Conferência de Caixas',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.text,
                           fontSize: 26,
                           fontWeight: FontWeight.w700,
                           letterSpacing: -0.6,
@@ -117,7 +121,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       Text(
                         'Entre com sua conta para continuar',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.72),
+                          color: AppColors.textSecondary,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
@@ -198,11 +202,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                 ),
               ),
-            ),
-            const Positioned(
-              top: 8,
-              right: 8,
-              child: ThemeModeButton(foreground: Colors.white),
             ),
           ],
         ),

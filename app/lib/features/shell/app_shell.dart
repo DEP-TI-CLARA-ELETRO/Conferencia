@@ -1,9 +1,12 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared/shared.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_mode.dart';
 import '../auth/auth_controller.dart';
 import 'filter_controls.dart';
@@ -13,7 +16,7 @@ import 'shell_providers.dart';
 
 const _wideBreakpoint = 900.0;
 
-/// Moldura do app: sidebar escura + conteúdo claro.
+/// Moldura glass: sidebar flutuante + fundo ambient + top bar translúcida.
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.child});
 
@@ -43,23 +46,29 @@ class AppShell extends ConsumerWidget {
     if (wide) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        body: Row(
-          children: [
-            _Sidebar(
-              items: items,
-              location: location,
-              collapsed: collapsed,
-              onToggleCollapse: () => ref.read(sidebarCollapsedProvider.notifier).toggle(),
-            ),
-            Expanded(
-              child: Column(
-                children: [
-                  _TopBar(user: user, wide: true),
-                  Expanded(child: body),
-                ],
+        body: GroupBackdrop(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 0, 14),
+                child: _Sidebar(
+                  items: items,
+                  location: location,
+                  collapsed: collapsed,
+                  onToggleCollapse: () => ref.read(sidebarCollapsedProvider.notifier).toggle(),
+                ),
               ),
-            ),
-          ],
+              Expanded(
+                child: Column(
+                  children: [
+                    _TopBar(user: user, wide: true),
+                    Expanded(child: content),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -106,8 +115,8 @@ class _Sidebar extends StatelessWidget {
   final bool collapsed;
   final VoidCallback? onToggleCollapse;
 
-  static const _expandedWidth = 248.0;
-  static const _collapsedWidth = 76.0;
+  static const _expandedWidth = 236.0;
+  static const _collapsedWidth = 78.0;
 
   @override
   Widget build(BuildContext context) {
@@ -117,96 +126,100 @@ class _Sidebar extends StatelessWidget {
       curve: Curves.easeOutCubic,
       width: collapsed ? _collapsedWidth : _expandedWidth,
       decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(32),
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [AppColors.sidebar, AppColors.sidebarEnd],
         ),
+        boxShadow: AppTheme.softShadow,
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // Durante a animação a largura ainda é estreita: não mostra o texto.
-          final compact = constraints.maxWidth < 160;
-          return SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: EdgeInsets.fromLTRB(compact ? 12 : 20, 24, compact ? 12 : 20, 24),
-                  child: compact
-                      ? const Center(child: _Logo())
-                      : const Row(
-                          children: [
-                            _Logo(),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Conferência',
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: -0.3,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(32),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 160;
+            return SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(compact ? 12 : 18, 22, compact ? 12 : 18, 18),
+                    child: compact
+                        ? const Center(child: _Logo())
+                        : const Row(
+                            children: [
+                              _Logo(),
+                              SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Conferência',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: -0.3,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                  ),
+                  if (!compact)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                      child: Text(
+                        'MENU',
+                        style: TextStyle(
+                          color: AppColors.sidebarText.withValues(alpha: 0.55),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.1,
                         ),
-                ),
-                if (!compact)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                    child: Text(
-                      'MENU',
-                      style: TextStyle(
-                        color: AppColors.sidebarText.withValues(alpha: 0.55),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.1,
                       ),
                     ),
-                  ),
-                Expanded(
-                  child: ListView(
-                    padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 12),
-                    children: [
-                      for (final item in items)
-                        _NavTile(
-                          item: item,
-                          selected: location == item.path || location.startsWith('${item.path}/'),
-                          collapsed: compact,
-                          onTap: () {
-                            if (closeOnTap) Navigator.of(context).pop();
-                            context.go(item.path);
-                          },
-                        ),
-                    ],
-                  ),
-                ),
-                if (onToggleCollapse != null)
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(compact ? 10 : 12, 8, compact ? 10 : 12, 12),
-                    child: _CollapseButton(collapsed: compact, onTap: onToggleCollapse!),
-                  ),
-                if (!compact)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
-                    child: Text(
-                      'Grupo Clara',
-                      style: TextStyle(
-                        color: AppColors.sidebarText.withValues(alpha: 0.45),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  Expanded(
+                    child: ListView(
+                      padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 12),
+                      children: [
+                        for (final item in items)
+                          _NavTile(
+                            item: item,
+                            selected: location == item.path || location.startsWith('${item.path}/'),
+                            collapsed: compact,
+                            onTap: () {
+                              if (closeOnTap) Navigator.of(context).pop();
+                              context.go(item.path);
+                            },
+                          ),
+                      ],
                     ),
-                  )
-                else
-                  const SizedBox(height: 12),
-              ],
-            ),
-          );
-        },
+                  ),
+                  if (onToggleCollapse != null)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(compact ? 10 : 12, 8, compact ? 10 : 12, 12),
+                      child: _CollapseButton(collapsed: compact, onTap: onToggleCollapse!),
+                    ),
+                  if (!compact)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+                      child: Text(
+                        'Grupo Clara',
+                        style: TextStyle(
+                          color: AppColors.sidebarText.withValues(alpha: 0.45),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    )
+                  else
+                    const SizedBox(height: 12),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -229,6 +242,7 @@ class _CollapseButton extends StatelessWidget {
           foregroundColor: Colors.white,
           backgroundColor: Colors.white.withValues(alpha: 0.10),
           minimumSize: const Size(48, 48),
+          shape: const CircleBorder(),
         ),
         icon: const Icon(Icons.keyboard_double_arrow_right_rounded),
       );
@@ -240,7 +254,7 @@ class _CollapseButton extends StatelessWidget {
         foregroundColor: Colors.white,
         backgroundColor: Colors.white.withValues(alpha: 0.10),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
         alignment: Alignment.centerLeft,
       ),
       icon: const Icon(Icons.keyboard_double_arrow_left_rounded, size: 20),
@@ -259,13 +273,14 @@ class _Logo extends StatelessWidget {
   Widget build(BuildContext context) {
     AppColors.watch(context);
     return Container(
-      width: 34,
-      height: 34,
+      width: 36,
+      height: 36,
       decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(10),
+        color: AppColors.glowMint.withValues(alpha: 0.22),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
-      child: const Icon(Icons.point_of_sale_rounded, color: Colors.white, size: 18),
+      child: Icon(Icons.point_of_sale_rounded, color: AppColors.glowMint, size: 18),
     );
   }
 }
@@ -289,24 +304,24 @@ class _NavTile extends StatelessWidget {
     final icon = Icon(
       selected ? item.selectedIcon : item.icon,
       size: 20,
-      color: selected ? AppColors.primaryHover : AppColors.sidebarText,
+      color: selected ? AppColors.sidebarTextActive : AppColors.sidebarText,
     );
 
     final tile = Material(
-      color: selected ? AppColors.sidebarMuted : Colors.transparent,
-      borderRadius: BorderRadius.circular(12),
+      color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(999),
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           padding: EdgeInsets.symmetric(
             horizontal: collapsed ? 0 : 12,
-            vertical: 11,
+            vertical: collapsed ? 12 : 11,
           ),
           alignment: collapsed ? Alignment.center : Alignment.centerLeft,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(999),
+            color: selected ? AppColors.glowMint.withValues(alpha: 0.22) : Colors.transparent,
           ),
           child: collapsed
               ? icon
@@ -332,7 +347,7 @@ class _NavTile extends StatelessWidget {
     );
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.only(bottom: 6),
       child: collapsed
           ? Tooltip(message: item.label, waitDuration: const Duration(milliseconds: 400), child: tile)
           : tile,
@@ -350,31 +365,39 @@ class _TopBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     AppColors.watch(context);
-    return Material(
-      color: AppColors.surface,
-      elevation: 0,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppColors.border)),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: SizedBox(
-            height: 64,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: wide ? 28 : 12),
-              child: Row(
-                children: [
-                  if (!wide)
-                    IconButton(
-                      icon: const Icon(Icons.menu_rounded),
-                      onPressed: onMenu,
-                    ),
-                  const Expanded(child: TopFilterControls()),
-                  const SizedBox(width: 4),
-                  const ThemeModeButton(),
-                  _UserMenu(user: user, showName: wide),
-                ],
+    return Padding(
+      padding: EdgeInsets.fromLTRB(wide ? 18 : 10, 14, wide ? 18 : 10, 0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.border),
+              boxShadow: AppTheme.softShadow,
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: SizedBox(
+                height: 58,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: wide ? 18 : 10),
+                  child: Row(
+                    children: [
+                      if (!wide)
+                        IconButton(
+                          icon: const Icon(Icons.menu_rounded),
+                          onPressed: onMenu,
+                        ),
+                      const Expanded(child: TopFilterControls()),
+                      const SizedBox(width: 4),
+                      const ThemeModeButton(),
+                      _UserMenu(user: user, showName: wide),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -449,7 +472,7 @@ class _UserMenu extends ConsumerWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: AppColors.primary,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Text(
               user.initials,

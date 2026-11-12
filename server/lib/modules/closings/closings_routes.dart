@@ -7,13 +7,21 @@ import '../../middleware/auth_middleware.dart';
 import '../auth/auth_repository.dart';
 import 'closing_detail_service.dart';
 import 'closings_repository.dart';
+import 'coupons_routes.dart';
 
 class ClosingsRoutes {
-  ClosingsRoutes(this._repo, this._authRepo, this._detail, {required this.webpostoConfigured});
+  ClosingsRoutes(
+    this._repo,
+    this._authRepo,
+    this._detail,
+    this._coupons, {
+    required this.webpostoConfigured,
+  });
 
   final ClosingsRepository _repo;
   final AuthRepository _authRepo;
   final ClosingDetailService _detail;
+  final CouponsRoutes _coupons;
   final bool webpostoConfigured;
 
   Router get router {
@@ -24,6 +32,11 @@ class ClosingsRoutes {
 
     r.get('/', pipe.addHandler(_list));
     r.get('/<id>/detail', pipe.addHandler(_detailOf));
+
+    // Cupons: mesmas rotas do CouponsRoutes, no mesmo Router.
+    final couponRouter = _coupons.router;
+    r.mount('/', couponRouter.call);
+
     return r;
   }
 
@@ -70,7 +83,6 @@ class ClosingsRoutes {
   Future<Response> _list(Request request) async {
     final qp = request.url.queryParameters;
 
-    // Aceita date (legado = 1 dia) ou dateFrom + dateTo (intervalo).
     final fromStr = qp['dateFrom'] ?? qp['date'];
     final toStr = qp['dateTo'] ?? qp['dateFrom'] ?? qp['date'];
     if (fromStr == null || fromStr.isEmpty) {

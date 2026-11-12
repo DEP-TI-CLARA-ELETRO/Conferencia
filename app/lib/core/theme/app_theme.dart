@@ -3,22 +3,23 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
-/// ThemeData global — tipografia Plus Jakarta Sans, cantos suaves, pouco ruído.
+/// Tema glass: cantos bem arredondados, botões em pílula, sombra suave.
 abstract final class AppTheme {
-  static const radius = 16.0;
-  static const radiusSm = 12.0;
+  static const radius = 28.0;
+  static const radiusSm = 18.0;
+  static const radiusPill = 999.0;
 
   static List<BoxShadow> get softShadow {
     final dark = AppColors.isDark;
     return [
       BoxShadow(
-        color: AppColors.shadow.withValues(alpha: dark ? 0.45 : 0.04),
-        blurRadius: 24,
-        offset: const Offset(0, 8),
+        color: AppColors.shadow.withValues(alpha: dark ? 0.45 : 0.08),
+        blurRadius: 32,
+        offset: const Offset(0, 14),
       ),
       BoxShadow(
-        color: AppColors.shadow.withValues(alpha: dark ? 0.28 : 0.03),
-        blurRadius: 6,
+        color: AppColors.shadow.withValues(alpha: dark ? 0.25 : 0.04),
+        blurRadius: 8,
         offset: const Offset(0, 2),
       ),
     ];
@@ -29,12 +30,13 @@ abstract final class AppTheme {
   static ThemeData dark() => _build(AppPalette.dark, Brightness.dark);
 
   static ThemeData _build(AppPalette c, Brightness brightness) {
+    final onPrimary = brightness == Brightness.dark ? const Color(0xFF0F1714) : Colors.white;
     final scheme = ColorScheme.fromSeed(
       seedColor: c.primary,
       brightness: brightness,
     ).copyWith(
       primary: c.primary,
-      onPrimary: Colors.white,
+      onPrimary: onPrimary,
       surface: c.surface,
       onSurface: c.text,
       error: c.danger,
@@ -65,12 +67,12 @@ abstract final class AppTheme {
     return base.copyWith(
       textTheme: text.copyWith(
         headlineLarge: text.headlineLarge?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.8,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -1.0,
         ),
         headlineMedium: text.headlineMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.6,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.7,
         ),
         titleLarge: text.titleLarge?.copyWith(fontWeight: FontWeight.w600, letterSpacing: -0.3),
       ),
@@ -87,12 +89,12 @@ abstract final class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: c.panel,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: c.surfaceMuted,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         border: border(c.border),
         enabledBorder: border(c.border),
         focusedBorder: border(c.primary, width: 1.5),
@@ -104,11 +106,11 @@ abstract final class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: c.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: onPrimary,
           minimumSize: const Size(0, 48),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 22),
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusSm)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusPill)),
           textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, letterSpacing: -0.1),
         ),
       ),
@@ -118,7 +120,7 @@ abstract final class AppTheme {
           backgroundColor: c.surface,
           minimumSize: const Size(0, 44),
           side: BorderSide(color: c.border),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusSm)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusPill)),
           textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ),
@@ -126,22 +128,22 @@ abstract final class AppTheme {
         style: TextButton.styleFrom(foregroundColor: c.primary),
       ),
       popupMenuTheme: PopupMenuThemeData(
-        color: c.surface,
-        elevation: 8,
+        color: c.panel,
+        elevation: 12,
         surfaceTintColor: Colors.transparent,
         shadowColor: c.shadow.withValues(alpha: brightness == Brightness.dark ? 0.4 : 0.12),
         textStyle: TextStyle(color: c.text, fontSize: 14),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: c.border),
         ),
       ),
       drawerTheme: DrawerThemeData(backgroundColor: c.sidebar),
       datePickerTheme: DatePickerThemeData(
-        backgroundColor: c.surface,
+        backgroundColor: c.panel,
         headerBackgroundColor: c.primaryMuted,
         headerForegroundColor: c.text,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius)),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(color: c.primary),
     );

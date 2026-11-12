@@ -19,6 +19,9 @@ class AppConfig {
     required this.seedDemoUsers,
     required this.webpostoBaseUrl,
     required this.webpostoChave,
+    required this.couponsUploadDir,
+    required this.googleVisionApiKey,
+    required this.tesseractBin,
   });
 
   final String dbHost;
@@ -39,6 +42,15 @@ class AppConfig {
 
   /// Chave de integração (?chave=...). Vazia = sync desabilitado.
   final String webpostoChave;
+
+  /// Pasta local das fotos de cupom.
+  final String couponsUploadDir;
+
+  /// API key do Google Cloud Vision (OCR).
+  final String googleVisionApiKey;
+
+  /// Executável do Tesseract (segundo motor OCR).
+  final String tesseractBin;
 
   bool get webpostoConfigured => webpostoChave.trim().isNotEmpty;
 
@@ -64,6 +76,9 @@ class AppConfig {
       webpostoBaseUrl: get('WEBPOSTO_BASE_URL', 'https://web.qualityautomacao.com.br')
           .replaceAll(RegExp(r'/+$'), ''),
       webpostoChave: get('WEBPOSTO_CHAVE', '').trim(),
+      couponsUploadDir: get('COUPONS_UPLOAD_DIR', 'uploads/coupons'),
+      googleVisionApiKey: get('GOOGLE_VISION_API_KEY', '').trim(),
+      tesseractBin: get('TESSERACT_BIN', 'tesseract'),
     );
   }
 }

@@ -228,7 +228,7 @@ class _PillShell extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.surfaceMuted,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: AppColors.border),
       ),

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:shared/shared.dart';
 
@@ -22,8 +24,8 @@ class ClosingsRepository {
         queryParameters: {
           'dateFrom': _ymd(from),
           'dateTo': _ymd(to),
-          ?'storeId': storeId,
-          ?'businessUnit': businessUnit?.code,
+          'storeId': ?storeId,
+          'businessUnit': ?businessUnit?.code,
         },
       );
       final items = (res.data as Map)['items'] as List? ?? [];
@@ -77,6 +79,59 @@ class ClosingsRepository {
         ),
       );
       return WebpostoSyncResultDto.fromJson(res.data as Map<String, dynamic>);
+    } catch (e) {
+      throw ApiException.from(e);
+    }
+  }
+
+  Future<List<ClosingCouponDto>> listCoupons(String closingId) async {
+    try {
+      final res = await _api.dio.get('/closings/$closingId/coupons');
+      final items = (res.data as Map)['items'] as List? ?? [];
+      return items
+          .map((e) => ClosingCouponDto.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw ApiException.from(e);
+    }
+  }
+
+  Future<ClosingCouponDto> uploadCoupon({
+    required String closingId,
+    required List<int> bytes,
+    required String filename,
+    String contentType = 'image/jpeg',
+  }) async {
+    try {
+      final res = await _api.dio.post(
+        '/closings/$closingId/coupons',
+        data: {
+          'imageBase64': base64Encode(bytes),
+          'filename': filename,
+          'contentType': contentType,
+        },
+        options: Options(
+          sendTimeout: const Duration(seconds: 60),
+          receiveTimeout: const Duration(seconds: 120),
+        ),
+      );
+      return ClosingCouponDto.fromJson(res.data as Map<String, dynamic>);
+    } catch (e) {
+      throw ApiException.from(e);
+    }
+  }
+
+  Future<ClosingCouponDto> confirmCoupon({
+    required String closingId,
+    required String couponId,
+    required Map<String, double> values,
+  }) async {
+    try {
+      final res = await _api.dio.post(
+        '/closings/$closingId/coupons/$couponId/confirm',
+        data: {'values': values},
+      );
+      return ClosingCouponDto.fromJson(res.data as Map<String, dynamic>);
     } catch (e) {
       throw ApiException.from(e);
     }

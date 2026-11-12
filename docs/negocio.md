@@ -58,7 +58,7 @@ Rotas centrais para o MVP: `EMPRESAS`, `CAIXAS`, `CAIXAS_APRESENTADO` (apresenta
 
 - Integração **Nerus** (Eletros, Presentes, distribuidoras) via leitura de banco.
 - Integração **CISS** (supermercados) via leitura de banco.
-- Fluxo 100% manual com OCR de cupom (pode entrar como fallback pontual, mas não é o foco da 1ª entrega WebPosto).
+- Fluxo de **cupom de fechamento**: foto/scan no app → OCR dual (Google Vision + Tesseract) → revisão humana → cruzamento com `payment_breakdown` do conector (WebPosto hoje; outros ERPs depois). OCR sozinho não fecha a conferência.
 
 A **UI e o fluxo humano** (lista do dia, conferência, etapas) devem nascer **genéricos** (por loja + conector), para reutilizar quando Nerus/CISS entrarem.
 
@@ -86,3 +86,4 @@ A **UI e o fluxo humano** (lista do dia, conferência, etapas) devem nascer **ge
 |------|------|
 | 2026-11-03 | Contexto Grupo Clara + multi-ERP; MVP = Postos + WebPosto. |
 | 2026-11-03 | `api.json` organizado em `docs/integracoes/webposto-openapi.json` + resumo `webposto.md`. |
+| 2026-11-11 | Cupom de fechamento: OCR dual + confirmação humana + match com conector. |

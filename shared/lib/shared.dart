@@ -15,3 +15,4 @@ export 'src/dto/user_dto.dart';
 export 'src/dto/session_dto.dart';
 export 'src/dto/closing_dto.dart';
 export 'src/dto/closing_detail_dto.dart';
+export 'src/dto/closing_coupon_dto.dart';

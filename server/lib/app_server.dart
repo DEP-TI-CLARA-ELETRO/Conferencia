@@ -12,6 +12,10 @@ import 'modules/auth/auth_routes.dart';
 import 'modules/closings/closing_detail_service.dart';
 import 'modules/closings/closings_repository.dart';
 import 'modules/closings/closings_routes.dart';
+import 'modules/closings/coupon_match_service.dart';
+import 'modules/closings/coupon_ocr_service.dart';
+import 'modules/closings/coupons_repository.dart';
+import 'modules/closings/coupons_routes.dart';
 import 'modules/health/health_routes.dart';
 import 'modules/webposto/webposto_routes.dart';
 
@@ -24,6 +28,19 @@ Handler buildHandler(AppConfig config, Pool<void> db, AuthRepository authRepo) {
   final webpostoSync = WebpostoSyncService(db, webpostoClient);
   final closingsRepo = ClosingsRepository(db);
   final closingDetail = ClosingDetailService(webpostoClient);
+  final couponsRepo = CouponsRepository(db);
+  final ocr = CouponOcrService(
+    visionApiKey: config.googleVisionApiKey,
+    tesseractBin: config.tesseractBin,
+  );
+  final match = CouponMatchService();
+  final couponsRoutes = CouponsRoutes(
+    couponsRepo,
+    authRepo,
+    ocr,
+    match,
+    uploadsDir: config.couponsUploadDir,
+  );
 
   final root = Router()
     ..mount('/health', HealthRoutes(db).router.call)
@@ -34,6 +51,7 @@ Handler buildHandler(AppConfig config, Pool<void> db, AuthRepository authRepo) {
         closingsRepo,
         authRepo,
         closingDetail,
+        couponsRoutes,
         webpostoConfigured: config.webpostoConfigured,
       ).router.call,
     )

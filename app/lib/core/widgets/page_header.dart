@@ -23,9 +23,9 @@ class PageHeader extends StatelessWidget {
               title,
               style: TextStyle(
                 color: AppColors.text,
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.8,
+                fontSize: 30,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -1.0,
                 height: 1.15,
               ),
             ),

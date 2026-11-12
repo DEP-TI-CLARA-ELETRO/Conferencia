@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Paleta concreta. Claro e escuro existem ao mesmo tempo no ThemeData.
+/// Paleta glass: verde floresta + mint + fundo creme suave.
 @immutable
 class AppPalette {
   const AppPalette({
@@ -31,6 +31,8 @@ class AppPalette {
     required this.sidebarText,
     required this.sidebarTextActive,
     required this.shadow,
+    required this.accentWarm,
+    required this.glowMint,
   });
 
   final Color background;
@@ -60,69 +62,74 @@ class AppPalette {
   final Color sidebarText;
   final Color sidebarTextActive;
   final Color shadow;
+  final Color accentWarm;
+  final Color glowMint;
 
   static const light = AppPalette(
-    background: Color(0xFFF3F5F8),
-    backgroundTint: Color(0xFFE8EEF3),
-    surface: Color(0xFFFFFFFF),
-    surfaceMuted: Color(0xFFF8FAFC),
-    panel: Color(0xFFFBFBFD),
-    border: Color(0xFFE2E8F0),
-    divider: Color(0xFFEEF2F6),
-    text: Color(0xFF0F172A),
-    textSecondary: Color(0xFF64748B),
-    textTertiary: Color(0xFF94A3B8),
-    primary: Color(0xFF1D4ED8),
-    primaryHover: Color(0xFF2563EB),
-    primarySoft: Color(0xFFDBEAFE),
-    primaryMuted: Color(0xFFEFF6FF),
-    success: Color(0xFF047857),
-    successSoft: Color(0xFFD1FAE5),
+    background: Color(0xFFF3F1EB),
+    backgroundTint: Color(0xFFE8F0EA),
+    surface: Color(0xF2FFFFFF),
+    surfaceMuted: Color(0xE8F7F8F5),
+    panel: Color(0xF7FFFFFF),
+    border: Color(0x33FFFFFF),
+    divider: Color(0x1A0F172A),
+    text: Color(0xFF14201C),
+    textSecondary: Color(0xFF5B6B64),
+    textTertiary: Color(0xFF8A9A92),
+    primary: Color(0xFF1F4D3A),
+    primaryHover: Color(0xFF2F6B52),
+    primarySoft: Color(0xFFD7F0E4),
+    primaryMuted: Color(0xFFEAF7F0),
+    success: Color(0xFF1F8A5B),
+    successSoft: Color(0xFFD7F5E8),
     warning: Color(0xFFB45309),
-    warningSoft: Color(0xFFFEF3C7),
-    danger: Color(0xFFBE123C),
+    warningSoft: Color(0xFFFFF0D6),
+    danger: Color(0xFFC2414B),
     dangerSoft: Color(0xFFFFE4E6),
-    neutralSoft: Color(0xFFF1F5F9),
-    sidebar: Color(0xFF0E1C36),
-    sidebarEnd: Color(0xFF163056),
-    sidebarMuted: Color(0xFF1B3054),
-    sidebarText: Color(0xFFCBD5E1),
+    neutralSoft: Color(0xFFE8EEE9),
+    sidebar: Color(0xFF16382C),
+    sidebarEnd: Color(0xFF0F2A21),
+    sidebarMuted: Color(0xFF255544),
+    sidebarText: Color(0xFFC8DED4),
     sidebarTextActive: Color(0xFFFFFFFF),
-    shadow: Color(0xFF0F172A),
+    shadow: Color(0xFF16382C),
+    accentWarm: Color(0xFFE8A07A),
+    glowMint: Color(0xFF7ED9B0),
   );
 
   static const dark = AppPalette(
-    background: Color(0xFF101418),
-    backgroundTint: Color(0xFF161C22),
-    surface: Color(0xFF181E25),
-    surfaceMuted: Color(0xFF212833),
-    panel: Color(0xFF141A20),
-    border: Color(0xFF2C3542),
-    divider: Color(0xFF262E38),
-    text: Color(0xFFE7EDF3),
-    textSecondary: Color(0xFF9AA6B4),
-    textTertiary: Color(0xFF6E7C8C),
-    primary: Color(0xFF3B82F6),
-    primaryHover: Color(0xFF60A5FA),
-    primarySoft: Color(0xFF1E3A5F),
-    primaryMuted: Color(0xFF172554),
-    success: Color(0xFF3DDC97),
-    successSoft: Color(0xFF14352A),
+    background: Color(0xFF0F1714),
+    backgroundTint: Color(0xFF15221C),
+    surface: Color(0xCC1A2621),
+    surfaceMuted: Color(0xB322302A),
+    panel: Color(0xE616221D),
+    border: Color(0x33FFFFFF),
+    divider: Color(0x1AFFFFFF),
+    text: Color(0xFFE8F2EC),
+    textSecondary: Color(0xFFA3B5AC),
+    textTertiary: Color(0xFF71857A),
+    primary: Color(0xFF5ECF9A),
+    primaryHover: Color(0xFF7ED9B0),
+    primarySoft: Color(0xFF1A3A2E),
+    primaryMuted: Color(0xFF152E25),
+    success: Color(0xFF5ECF9A),
+    successSoft: Color(0xFF1A3A2E),
     warning: Color(0xFFE6B15A),
     warningSoft: Color(0xFF3A2C14),
     danger: Color(0xFFF07178),
     dangerSoft: Color(0xFF3A1E24),
-    neutralSoft: Color(0xFF242C36),
-    sidebar: Color(0xFF0B1220),
-    sidebarEnd: Color(0xFF0B1220),
-    sidebarMuted: Color(0xFF172033),
-    sidebarText: Color(0xFFC5D0DA),
+    neutralSoft: Color(0xFF24302A),
+    sidebar: Color(0xFF0C1713),
+    sidebarEnd: Color(0xFF0C1713),
+    sidebarMuted: Color(0xFF1A2E25),
+    sidebarText: Color(0xFFC5D8CF),
     sidebarTextActive: Color(0xFFFFFFFF),
     shadow: Color(0xFF000000),
+    accentWarm: Color(0xFFE8A07A),
+    glowMint: Color(0xFF7ED9B0),
   );
 }
 
-/// Avisa a árvore quando o modo muda, para os widgets que usam [AppColors].
 class PaletteScope extends InheritedWidget {
   const PaletteScope({required this.dark, required super.child, super.key});
 
@@ -137,7 +144,6 @@ class PaletteScope extends InheritedWidget {
   bool updateShouldNotify(PaletteScope oldWidget) => dark != oldWidget.dark;
 }
 
-/// Cores do modo atual. Chame [watch] no início do build que as usa.
 abstract final class AppColors {
   static AppPalette _p = AppPalette.light;
 
@@ -174,4 +180,6 @@ abstract final class AppColors {
   static Color get sidebarText => _p.sidebarText;
   static Color get sidebarTextActive => _p.sidebarTextActive;
   static Color get shadow => _p.shadow;
+  static Color get accentWarm => _p.accentWarm;
+  static Color get glowMint => _p.glowMint;
 }

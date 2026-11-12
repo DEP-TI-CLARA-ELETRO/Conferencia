@@ -3,13 +3,21 @@ import 'package:shared/shared.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
+import 'closing_coupon_panel.dart';
+import 'closings_repository.dart';
 
-/// Painel do caixa: resumo, formas de pagamento e vendas.
+/// Painel do caixa: resumo, formas de pagamento, cupom e vendas.
 class ClosingDetailDialog extends StatefulWidget {
-  const ClosingDetailDialog({super.key, required this.closing, required this.load});
+  const ClosingDetailDialog({
+    super.key,
+    required this.closing,
+    required this.load,
+    required this.repository,
+  });
 
   final ClosingDto closing;
   final Future<ClosingDetailDto> Function() load;
+  final ClosingsRepository repository;
 
   @override
   State<ClosingDetailDialog> createState() => _ClosingDetailDialogState();
@@ -101,6 +109,11 @@ class _ClosingDetailDialogState extends State<ClosingDetailDialog> {
                           ],
                         );
                       },
+                    ),
+                    const SizedBox(height: 16),
+                    ClosingCouponPanel(
+                      closing: c,
+                      repository: widget.repository,
                     ),
                     const SizedBox(height: 16),
                     _SalesTable(loading: _loading, detail: _detail, error: _error),

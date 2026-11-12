@@ -196,6 +196,7 @@ class _ClosingsPageState extends ConsumerState<ClosingsPage> {
                       builder: (_) => ClosingDetailDialog(
                         closing: item,
                         load: () => ref.read(closingsRepositoryProvider).detail(item.id),
+                        repository: ref.read(closingsRepositoryProvider),
                       ),
                     ),
                   ),

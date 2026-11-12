@@ -1,5 +1,5 @@
 name: conferencia_app
-description: "Conferencia de caixas - interface web (Flutter)."
+description: "Conferencia de caixas - app Flutter (web, Android e iOS)."
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -19,6 +19,7 @@ dependencies:
   google_fonts: ^6.3.0
   intl: any
   shared_preferences: ^2.5.0
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

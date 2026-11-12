@@ -1,9 +1,28 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
-/// URL base da API.
-/// Em produção: flutter build web --dart-define=API_URL=https://api.exemplo.com
-/// String.fromEnvironment lê essa constante de compilação; se não passar, usa localhost.
-const apiBaseUrl = String.fromEnvironment('API_URL', defaultValue: 'http://localhost:8080');
+/// URL via --dart-define=API_URL=...; se vazio, escolhe por plataforma.
+const _definedApiUrl = String.fromEnvironment('API_URL');
+
+/// Web no PC → localhost. Web no celular (mesmo Wi‑Fi) → host da página :8080.
+/// Emulador Android → 10.0.2.2. Override: --dart-define=API_URL=http://IP:8080
+String resolveApiBaseUrl() {
+  if (_definedApiUrl.isNotEmpty) return _definedApiUrl;
+  if (kIsWeb) {
+    final host = Uri.base.host;
+    if (host.isNotEmpty && host != 'localhost' && host != '127.0.0.1') {
+      return 'http://$host:8080';
+    }
+    return 'http://localhost:8080';
+  }
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    return 'http://10.0.2.2:8080';
+  }
+  return 'http://localhost:8080';
+}
+
+/// Mantido para quem importa o nome antigo; prefira [resolveApiBaseUrl].
+String get apiBaseUrl => resolveApiBaseUrl();
 
 /// Erro amigável da API (mensagem + código + status HTTP).
 class ApiException implements Exception {
@@ -13,11 +32,9 @@ class ApiException implements Exception {
   final String? code;
   final int? status;
 
-  /// Converte qualquer erro (principalmente DioException) em ApiException.
   factory ApiException.from(Object error) {
     if (error is DioException) {
       final data = error.response?.data;
-      // Se o servidor mandou { "error": "...", "code": "..." }, usamos isso
       if (data is Map && data['error'] is String) {
         return ApiException(
           data['error'] as String,
@@ -42,34 +59,31 @@ class ApiException implements Exception {
   }
 
   @override
-  String toString() => message; // quando printar a exceção, mostra a mensagem
+  String toString() => message;
 }
 
 /// Cliente HTTP do app (pacote dio).
 class ApiClient {
-  ApiClient({String baseUrl = apiBaseUrl})
+  ApiClient({String? baseUrl})
       : dio = Dio(BaseOptions(
-          baseUrl: baseUrl,
+          baseUrl: baseUrl ?? resolveApiBaseUrl(),
           connectTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 20),
           headers: {'accept': 'application/json'},
         )) {
-    // Interceptor = "gancho" em toda request/resposta/erro
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
-        // Antes de enviar: se tem token, coloca Authorization: Bearer ...
         final t = token;
         if (t != null) options.headers['authorization'] = 'Bearer $t';
-        handler.next(options); // continua o envio
+        handler.next(options);
       },
       onError: (e, handler) {
         final data = e.response?.data;
         final code = data is Map ? data['code'] : null;
-        // Se o servidor disse que a sessão morreu, avisa o app
         final expired = e.response?.statusCode == 401 &&
             token != null &&
             (code == 'session_expired' || code == 'unauthenticated');
-        if (expired) onSessionExpired?.call(); // ?.call = só chama se não for null
+        if (expired) onSessionExpired?.call();
         handler.next(e);
       },
     ));
@@ -77,9 +91,7 @@ class ApiClient {
 
   final Dio dio;
 
-  /// Token da sessão atual (null = deslogado).
   String? token;
 
-  /// Callback quando o servidor recusa o token.
   void Function()? onSessionExpired;
 }
