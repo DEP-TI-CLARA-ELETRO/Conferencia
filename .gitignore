@@ -1,11 +1,8 @@
-# Dart / Flutter
-.dart_tool/
-.packages
-build/
-.flutter-plugins
-.flutter-plugins-dependencies
-pubspec.lock
-!app/pubspec.lock
+# Node
+node_modules/
+dist/
+api/uploads/
+client/dist/
 
 # Segredos e ambiente
 .env
@@ -21,6 +18,8 @@ pubspec.lock
 .DS_Store
 Thumbs.db
 
-# Dados locais
-infra/data/
-server/uploads/
+# Legacy Dart (se restarem artefatos)
+.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies

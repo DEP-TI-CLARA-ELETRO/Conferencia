@@ -1,37 +1,20 @@
 name: conferencia
 
 services:
-  db:
-    image: postgres:16-alpine
-    container_name: conferencia_db
+  mongo:
+    image: mongo:7
+    container_name: conferencia_mongo
     restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${DB_USER:-conferencia}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-conferencia_dev}
-      POSTGRES_DB: ${DB_NAME:-conferencia}
-      TZ: America/Manaus
+    # Se a porta 27017 já estiver em uso no host, defina MONGO_PORT=27018 no .env
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "${MONGO_PORT:-27017}:27017"
     volumes:
-      - conferencia_pgdata:/var/lib/postgresql/data
+      - conferencia_mongo_data:/data/db
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-conferencia} -d ${DB_NAME:-conferencia}"]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 5s
-      timeout: 3s
+      timeout: 5s
       retries: 10
 
-  # Opcional: docker compose --profile tools up -d
-  pgadmin:
-    image: dpage/pgadmin4:8
-    container_name: conferencia_pgadmin
-    profiles: ["tools"]
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@local.dev
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "5050:80"
-    depends_on:
-      - db
-
 volumes:
-  conferencia_pgdata:
+  conferencia_mongo_data:

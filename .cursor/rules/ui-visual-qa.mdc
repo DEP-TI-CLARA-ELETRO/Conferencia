@@ -1,0 +1,22 @@
+---
+description: After UI changes, verify in the Cursor browser with screenshot before asking the user
+alwaysApply: true
+---
+
+# UI visual QA (Conferência)
+
+Stack atual: **React (Vite) em `client/`** + **API Express em `api/`**.
+
+After any change that affects layout, theme, shell, sidebar, login, or page widgets:
+
+1. Ensure the app is running (`npm run dev` in `client` → `http://127.0.0.1:8081`, and `npm run dev` in `api` → `:8080` if needed).
+2. Open `http://127.0.0.1:8081` in the Cursor browser (`browser_navigate`).
+3. Take a screenshot (`browser_take_screenshot`) and **read the image** for:
+   - Cut-off text, overflowing flex/grid children, or horizontal scrollbars that should not exist
+   - Misaligned or off-center sidebar icons (collapsed rail must center icon tiles)
+   - Sidebar overlaying main content when it should push layout (`display: flex` row, not absolute overlay)
+   - Clipped labels that still occupy layout width when collapsed (use `display: none`, not only `opacity: 0`)
+4. Fix issues you find **before** telling the user the UI is done.
+5. Do not rely on the user to catch visual/layout errors they already showed once.
+
+Collapsed rail target math: width ~80px, nav tile 48×48 centered (padding ~16px each side). Expanded ~220px with labels.
